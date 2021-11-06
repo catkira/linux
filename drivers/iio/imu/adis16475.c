@@ -353,10 +353,11 @@ static int adis16475_set_freq(struct adis16475 *st, const u32 freq)
 	if (dec > st->info->max_dec)
 		dec = st->info->max_dec;
 
-	ret = adis_write_reg_16(&st->adis, ADIS16475_REG_DEC_RATE, dec);
+	ret = __adis_write_reg_16(&st->adis, ADIS16475_REG_DEC_RATE, dec);
 	if (ret)
 		goto error;
 
+	adis_dev_unlock(&st->adis);
 	/*
 	 * If decimation is used, then gyro and accel data will have meaningful
 	 * bits on the LSB registers. This info is used on the trigger handler.
@@ -1321,7 +1322,6 @@ static int adis16475_probe(struct spi_device *spi)
 	if (ret)
 		return ret;
 
-	indio_dev->dev.parent = &spi->dev;
 	indio_dev->name = st->info->name;
 	indio_dev->channels = st->info->channels;
 	indio_dev->num_channels = st->info->num_channels;

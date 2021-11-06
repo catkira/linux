@@ -41,7 +41,7 @@
                                                       FREQ_HOPPING_RX_GAIN_TABLE_NUM_BYTES  +\
                                                       FREQ_HOPPING_TX_ATTEN_TABLE_NUM_BYTES +\
                                                       FREQ_HOPPING_CONFIGURATION_NUM_BYTES)
-#define FREQ_HOPPING_MAX_NUM_BYTES                   1024u
+#define FREQ_HOPPING_MAX_NUM_BYTES                   1536u
 #define FREQ_HOPPING_HOP_TABLE_PARTITION_ADDR_OFFSET 16u
 
 #define ADI_FH_CHECK_FH_ENABLED(device) \

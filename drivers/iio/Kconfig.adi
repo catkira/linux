@@ -57,6 +57,7 @@ config IIO_ALL_ADI_DRIVERS
 	select AD9361_EXT_BAND_CONTROL
 	select AD9371
 	select ADAR1000
+	select ADAR3000
 	select ADRV9009
 	select ADRV9001
 	select AD9467
@@ -105,6 +106,7 @@ config IIO_ALL_ADI_DRIVERS
 	select ADF4360
 	select ADF4371
 	select ADF5355
+	select ADL5960
 	select ADMV1013
 	select ADMV1014
 	select ADMV8818
@@ -139,6 +141,7 @@ config IIO_ALL_ADI_DRIVERS
 	select AD7816
 	select AD7192
 	select AD7280
+	select AD7292
 	select ADT7316
 	select ADT7316_SPI if SPI
 	select ADT7316_I2C if I2C
@@ -155,6 +158,7 @@ config IIO_ALL_ADI_DRIVERS
 	select AD2S1210
 	select LTC6952
 	select LTC2471
+	select LTC2496
 	select LTC2632
 	select LTC2485
 	select ADXRS290
@@ -163,3 +167,5 @@ config IIO_ALL_ADI_DRIVERS
 	select AXI_JESD204_RX
 	select AXI_ADXCVR
 	select ONE_BIT_ADC_DAC
+	select ADUX1020
+	select IIO_GEN_MUX

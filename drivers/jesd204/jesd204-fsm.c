@@ -128,10 +128,10 @@ static const struct jesd204_fsm_table_entry jesd204_start_links_states[] = {
 	JESD204_STATE_OP_WITH_POST_HOOK(LINK_INIT, jesd204_fsm_init_link),
 	JESD204_STATE_OP(LINK_SUPPORTED),
 	JESD204_STATE_OP(LINK_PRE_SETUP),
-	JESD204_STATE_OP(LINK_SETUP),
 	JESD204_STATE_OP(CLK_SYNC_STAGE1),
 	JESD204_STATE_OP(CLK_SYNC_STAGE2),
 	JESD204_STATE_OP(CLK_SYNC_STAGE3),
+	JESD204_STATE_OP(LINK_SETUP),
 	JESD204_STATE_OP(OPT_SETUP_STAGE1),
 	JESD204_STATE_OP(OPT_SETUP_STAGE2),
 	JESD204_STATE_OP(OPT_SETUP_STAGE3),
@@ -597,9 +597,15 @@ static int jesd204_fsm_handle_con_cb(struct jesd204_dev *jdev_it,
 	if (ret < 0) {
 		ol = &jdev_top->active_links[link_idx];
 		jesd204_err(jdev_it,
-			    "JESD204[%u] got error from cb: %d\n",
-			    ol->link.link_id, ret);
-		return jesd204_dev_set_error(jdev_it, ol, con, ret);
+			    "JESD204[%u] In %s got error from cb: %d%s\n",
+			    ol->link.link_id,
+			    jesd204_state_str(fsm_data->nxt_state), ret,
+			    ol->fsm_ignore_errors ? " (ignoring!)" : "");
+
+		if (ol->fsm_ignore_errors)
+			ret = JESD204_STATE_CHANGE_DONE;
+		else
+			return jesd204_dev_set_error(jdev_it, ol, con, ret);
 	}
 
 	if (ret != JESD204_STATE_CHANGE_DONE)
@@ -926,7 +932,7 @@ static int jesd204_fsm_init_link(struct jesd204_dev *jdev,
 {
 	struct jesd204_dev_top *jdev_top = jesd204_dev_top_dev(jdev);
 
-	if (!jdev_top)
+	if (!jdev_top || fsm_data->rollback)
 		return 0;
 
 	return jesd204_dev_init_link_data(jdev_top, fsm_data->link_idx);

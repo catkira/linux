@@ -38,7 +38,7 @@
 #define CHIPID_AD9689			0xE2
 #define CHIPID_AD9694			0xDB
 #define CHIPID_AD9695			0xDE
-#define CHIPID_AD9697			0xDE
+#define CHIPID_AD9697			0xE4
 
 #define CHIPID_MASK			0xFF
 #define ID_DUAL				BIT(31)
@@ -1071,14 +1071,9 @@ static int ad9208_post_iio_register(struct iio_dev *indio_dev)
 	struct axiadc_converter *conv = iio_device_get_drvdata(indio_dev);
 
 	if (iio_get_debugfs_dentry(indio_dev)) {
-		struct dentry *stats;
-
-		stats = debugfs_create_devm_seqfile(&conv->spi->dev, "status",
-					iio_get_debugfs_dentry(indio_dev),
-					ad9208_status_show);
-		if (PTR_ERR_OR_ZERO(stats))
-			dev_err(&conv->spi->dev,
-				"Failed to create debugfs entry");
+		debugfs_create_devm_seqfile(&conv->spi->dev, "status",
+					    iio_get_debugfs_dentry(indio_dev),
+					    ad9208_status_show);
 	}
 
 	return 0;

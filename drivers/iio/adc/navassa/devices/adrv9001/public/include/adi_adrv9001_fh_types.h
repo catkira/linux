@@ -48,7 +48,7 @@ extern "C" {
 /**
  * \brief Minimum carrier frequency supported in frequency hopping mode
  */
-#define ADI_ADRV9001_FH_MIN_CARRIER_FREQUENCY_HZ 30000000llu    /* 30 MHz */
+#define ADI_ADRV9001_FH_MIN_CARRIER_FREQUENCY_HZ 25000000llu    /* 25 MHz */
 
 /**
  * \brief Maximum carrier frequency supported in frequency hopping mode

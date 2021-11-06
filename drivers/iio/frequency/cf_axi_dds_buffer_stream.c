@@ -15,6 +15,7 @@
 
 #include <linux/iio/iio.h>
 #include <linux/iio/sysfs.h>
+#include <linux/iio/buffer.h>
 #include <linux/iio/buffer_impl.h>
 #include <linux/iio/buffer-dma.h>
 #include <linux/iio/buffer-dmaengine.h>
@@ -63,7 +64,7 @@ static int dds_buffer_state_set(struct iio_dev *indio_dev, bool state)
 
 	dds_write(st, ADI_REG_VDMA_STATUS, ADI_VDMA_OVF | ADI_VDMA_UNF);
 
-	cf_axi_dds_start_sync(st);
+	cf_axi_dds_start_sync(st, 1);
 
 	return 0;
 }

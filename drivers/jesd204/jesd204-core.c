@@ -577,6 +577,11 @@ static struct jesd204_dev *jesd204_dev_alloc(struct device_node *np)
 
 		jdev->is_top = true;
 
+		if (of_property_read_bool(np, "jesd204-ignore-errors"))
+			for (i = 0; i < jdev_top->num_links; i++)
+				jdev_top->active_links[i].fsm_ignore_errors
+				= true;
+
 		list_add(&jdev_top->entry, &jesd204_topologies);
 		jesd204_topologies_count++;
 	} else {
@@ -781,7 +786,6 @@ static int jesd204_dev_init_link_lane_ids(struct jesd204_dev_top *jdev_top,
 					  struct jesd204_link *jlink)
 {
 	struct jesd204_dev *jdev = &jdev_top->jdev;
-	struct device *dev = jdev->dev.parent;
 	u8 id;
 
 	if (!jlink->num_lanes) {
@@ -797,11 +801,11 @@ static int jesd204_dev_init_link_lane_ids(struct jesd204_dev_top *jdev_top,
 		return 0;
 
 	if (jlink->lane_ids)
-		devm_kfree(dev, jlink->lane_ids);
+		kfree(jlink->lane_ids);
 
-	jlink->lane_ids = devm_kmalloc_array(dev, jlink->num_lanes,
-					     sizeof(*jlink->lane_ids),
-					     GFP_KERNEL);
+	jlink->lane_ids = kmalloc_array(jlink->num_lanes,
+					sizeof(*jlink->lane_ids),
+					GFP_KERNEL);
 	if (!jlink->lane_ids)
 		return -ENOMEM;
 

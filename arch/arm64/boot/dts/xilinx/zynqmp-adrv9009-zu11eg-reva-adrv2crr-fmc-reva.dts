@@ -46,6 +46,7 @@
  */
 
 #include "zynqmp-adrv9009-zu11eg-reva.dtsi"
+#include <dt-bindings/clock/ad9545.h>
 
 / {
 	leds {
@@ -167,12 +168,31 @@
 			};
 		};
 	};
+
+	psgtr_ref1: ad9542_out0_c {
+	        compatible = "fixed-clock";
+	        #clock-cells = <0>;
+	        clock-frequency = <125000000>;
+	};
+
+	psgtr_ref2: ad9542_out1_a {
+	        compatible = "fixed-clock";
+	        #clock-cells = <0>;
+	        clock-frequency = <27000000>;
+	};
+
+	psgtr_ref3: ad9542_out1_b {
+	        compatible = "fixed-clock";
+	        #clock-cells = <0>;
+	        clock-frequency = <26000000>;
+	};
 };
 
-&serdes {
+&psgtr {
 	status = "okay";
+	clocks = <&psgtr_ref1>, <&psgtr_ref2>, <&psgtr_ref3>;
+	clock-names = "ref1", "ref2", "ref3";
 };
-
 
 /*
  * SGMII Ethernet: M1 (PHY1)
@@ -183,7 +203,7 @@
 	status = "okay";
 	phy-handle = <&phy1>;
 	phy-mode = "sgmii";
-	phys = <&lane0 PHY_TYPE_SGMII 0 1 125000000>;
+	phys = <&psgtr 0 PHY_TYPE_SGMII 0 1>;
 	mdiobus-connected = <&gem3>;
 };
 
@@ -202,8 +222,8 @@
 &zynqmp_dpsub {
 	status = "okay";
 	phy-names = "dp-phy0", "dp-phy1";
-	phys = <&lane3 PHY_TYPE_DP 0 2 27000000>,
-		<&lane2 PHY_TYPE_DP 1 2 27000000>;
+	phys = <&psgtr 3 PHY_TYPE_DP 0 2>,
+	       <&psgtr 2 PHY_TYPE_DP 1 2>;
 };
 
 &zynqmp_dp_snd_pcm0 {
@@ -222,7 +242,7 @@
 	status = "okay";
 };
 
-&xlnx_dpdma {
+&zynqmp_dpdma {
 	status = "okay";
 };
 
@@ -242,7 +262,7 @@
 	dr_mode = "host";
 	phy-names = "usb3-phy";
 	//snps,usb3_lpm_capable;
-	phys = <&lane1 PHY_TYPE_USB3 0 3 26000000>;
+	phys = <&psgtr 1 PHY_TYPE_USB3 0 3>;
 	maximum-speed = "super-speed";
 };
 
@@ -299,7 +319,50 @@
 			#size-cells = <0>;
 			reg = <1>;
 
-			/* 4A */
+			ad9545_clock: ad9545@4a {
+				compatible = "adi,ad9545";
+				reg = <0x4a>;
+
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				adi,ref-crystal;
+				adi,ref-frequency-hz = <49152000>;
+
+				#clock-cells = <2>;
+
+				assigned-clocks = <&ad9545_clock AD9545_CLK_NCO AD9545_NCO0>,
+						  <&ad9545_clock AD9545_CLK_PLL AD9545_PLL1>,
+						  <&ad9545_clock AD9545_CLK_OUT AD9545_Q1A>,
+						  <&ad9545_clock AD9545_CLK_OUT AD9545_Q1AA>;
+				assigned-clock-rates = <10000>, <1875000000>, <156250000>, <156250000>;
+				assigned-clock-phases = <0>, <0>, <0>, <180>;
+
+				aux-nco-clk@AD9545_NCO0 {
+					reg = <AD9545_NCO0>;
+					adi,freq-lock-threshold-ps = <16000000>;
+					adi,phase-lock-threshold-ps = <16000000>;
+				};
+
+				ad9545_apll1: pll-clk@AD9545_PLL1 {
+					reg = <AD9545_PLL1>;
+					adi,pll-source = <4>;
+					adi,pll-loop-bandwidth-hz = <200>;
+				};
+
+				output-clk@AD9545_Q1A {
+					reg = <AD9545_Q1A>;
+					adi,output-mode = <DRIVER_MODE_SINGLE_DIV_DIF>;
+					adi,current-source-microamp = <15000>;
+				};
+
+				output-clk@AD9545_Q1AA {
+					reg = <AD9545_Q1AA>;
+					adi,output-mode = <DRIVER_MODE_SINGLE_DIV_DIF>;
+					adi,current-source-microamp = <15000>;
+				};
+
+			};
 
 		};
 		i2c@2 { /* PTN5150 */
