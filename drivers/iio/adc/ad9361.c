@@ -38,6 +38,7 @@
 #include "ad9361.h"
 #include "ad9361_private.h"
 
+
 static const struct SynthLUT SynthLUT_FDD[LUT_FTDD_ENT][SYNTH_LUT_SIZE] = {
 {
 	{12605, 13, 1, 4, 2, 15, 12, 7, 14, 6, 14, 5, 15},  /* 40 MHz */
@@ -1031,7 +1032,7 @@ int ad9361_bist_loopback(struct ad9361_rf_phy *phy, unsigned mode)
 }
 EXPORT_SYMBOL(ad9361_bist_loopback);
 
-int ad9361_write_bist_reg(struct ad9361_rf_phy *phy, u32 val)
+int ad9361_write_bist_reg(struct ad9361_rf_phy *phy, u32 val) 
 {
 	if (!phy || !phy->state)
 		return -EINVAL;
@@ -1531,9 +1532,9 @@ static int ad9361_get_split_table_gain(struct ad9361_rf_phy *phy, u32 idx_reg,
 
 	rx_gain->tia_index = ad9361_spi_readf(spi, REG_GAIN_TABLE_READ_DATA2, TIA_GAIN);
 
-	rx_gain->lmt_gain = lna_table[ad9361_gt(phy) - RXGAIN_TBLS_END][rx_gain->lna_index] +
-			mixer_table[ad9361_gt(phy) - RXGAIN_TBLS_END][rx_gain->mixer_index] +
-			tia_table[rx_gain->tia_index];
+	rx_gain->lmt_gain = lna_table[ad9361_gt(phy)][rx_gain->lna_index] +
+				mixer_table[ad9361_gt(phy)][rx_gain->mixer_index] +
+				tia_table[rx_gain->tia_index];
 
 	ad9361_spi_write(spi, REG_GAIN_TABLE_ADDRESS, tbl_addr);
 
@@ -2731,15 +2732,11 @@ static int __ad9361_tx_quad_calib(struct ad9361_rf_phy *phy, u32 phase,
 		if (ret < 0)
 			return ret;
 
-		if (res) {
+		if (res)
 			*res = ad9361_spi_read(phy->spi,
 					(phy->pdata->rx1tx1_mode_use_tx_num == 2) ?
 					REG_QUAD_CAL_STATUS_TX2 : REG_QUAD_CAL_STATUS_TX1) &
 					(TX1_LO_CONV | TX1_SSB_CONV);
-			if (phy->pdata->rx2tx2)
-				*res &= ad9361_spi_read(phy->spi, REG_QUAD_CAL_STATUS_TX2) &
-					(TX2_LO_CONV | TX2_SSB_CONV);
-		}
 
 		return 0;
 }
@@ -2897,8 +2894,8 @@ static int ad9361_tx_quad_calib(struct ad9361_rf_phy *phy,
 	ad9361_spi_write(spi, REG_QUAD_CAL_COUNT, 0xFF);
 	ad9361_spi_write(spi, REG_KEXP_1, KEXP_TX(1) | KEXP_TX_COMP(3) |
 			 KEXP_DC_I(3) | KEXP_DC_Q(3));
-	ad9361_spi_write(spi, REG_MAG_FTEST_THRESH, 0x03);
-	ad9361_spi_write(spi, REG_MAG_FTEST_THRESH_2, 0x03);
+	ad9361_spi_write(spi, REG_MAG_FTEST_THRESH, 0x01);
+	ad9361_spi_write(spi, REG_MAG_FTEST_THRESH_2, 0x01);
 
 	if (st->tx_quad_lpf_tia_match < 0) /* set in ad9361_load_gt() */
 		dev_err(dev, "failed to find suitable LPF TIA value in gain table\n");
@@ -4816,7 +4813,7 @@ static int ad9361_rssi_gain_step_calib(struct ad9361_rf_phy *phy)
 	u8  lo_index;
 	u8  i;
 	int ret;
-
+	
 	lo_freq_hz = ad9361_from_clk(clk_get_rate(phy->clks[RX_RFPLL]));
 	if (lo_freq_hz < 1300000000ULL)
 		lo_index = 0;
@@ -5050,7 +5047,7 @@ static int ad9361_setup(struct ad9361_rf_phy *phy)
 
 	clk_set_parent(phy->clks[TX_RFPLL], phy->clks[TX_RFPLL_INT]);
 	clk_set_parent(phy->clks[RX_RFPLL], phy->clks[RX_RFPLL_INT]);
-
+	
 	ret = clk_set_rate(phy->clks[RX_REFCLK], ref_freq);
 	if (ret < 0) {
 		dev_err(dev, "Failed to set RX Synth ref clock rate (%d)\n", ret);
@@ -5070,7 +5067,6 @@ static int ad9361_setup(struct ad9361_rf_phy *phy)
 	ret = ad9361_txrx_synth_cp_calib(phy, ref_freq, true); /* TXCP */
 	if (ret < 0)
 		return ret;
-
 	ret = clk_set_rate(phy->clks[RX_RFPLL], ad9361_to_clk(pd->rx_synth_freq));
 	if (ret < 0) {
 		dev_err(dev, "Failed to set RX Synth rate (%d)\n",
@@ -5094,7 +5090,6 @@ static int ad9361_setup(struct ad9361_rf_phy *phy)
 	ret = clk_prepare_enable(phy->clks[TX_RFPLL]);
 	if (ret < 0)
 		return ret;
-
 	clk_set_parent(phy->clks[RX_RFPLL],
 			pd->use_ext_rx_lo ? phy->clk_ext_lo_rx :
 			phy->clks[RX_RFPLL_INT]);
@@ -6983,6 +6978,7 @@ static ssize_t ad9361_phy_store(struct device *dev,
 
 		ad9361_set_trx_clock_chain(phy, st->current_rx_path_clks, st->current_tx_path_clks);
 		clk_set_rate(phy->clks[RX_RFPLL], rx);
+		
 		clk_set_rate(phy->clks[TX_RFPLL], tx);
 		break;
 	}
@@ -7170,7 +7166,7 @@ static IIO_DEVICE_ATTR(calib_mode_available, S_IRUGO,
 			NULL,
 			AD9361_CALIB_MODE_AVAIL);
 
-static IIO_DEVICE_ATTR(rssi_gain_step_error, S_IRUGO | S_IWUSR,
+static IIO_DEVICE_ATTR(rssi_gain_step_error, S_IRUGO,
 			ad9361_phy_show,
 			ad9361_phy_store,
 			AD9361_RSSI_GAIN_STEP_ERROR);
@@ -7369,10 +7365,40 @@ static ssize_t ad9361_phy_lo_write(struct iio_dev *indio_dev,
 		case 0:
 			ret = clk_set_rate(phy->clks[RX_RFPLL],
 					ad9361_to_clk(readin));
+					if(ad9361_to_clk(readin)>1500000000)
+					{
+					gpiod_set_value_cansleep(phy->pdata->VCRX1_1_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCRX2_2_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCRX1_2_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCRX2_1_gpio, 0);
+					}
+					else
+					{
+					gpiod_set_value_cansleep(phy->pdata->VCRX1_1_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCRX2_2_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCRX1_2_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCRX2_1_gpio, 1);
+					}
+				
+/******************************切换滤波器频段**********************************/
 			break;
 		case 1:
 			ret = clk_set_rate(phy->clks[TX_RFPLL],
 					ad9361_to_clk(readin));
+			if(ad9361_to_clk(readin)>1500000000)
+					{
+					gpiod_set_value_cansleep(phy->pdata->VCTX1_2_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCTX2_1_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCTX1_1_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCTX2_2_gpio, 0);
+					}
+					else
+					{
+					gpiod_set_value_cansleep(phy->pdata->VCTX1_2_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCTX2_1_gpio, 0);
+					gpiod_set_value_cansleep(phy->pdata->VCTX1_1_gpio, 1);
+					gpiod_set_value_cansleep(phy->pdata->VCTX2_2_gpio, 1);
+					}
 			if (test_bit(0, &st->flags))
 				wait_for_completion(&phy->complete);
 
@@ -7424,10 +7450,11 @@ static ssize_t ad9361_phy_lo_write(struct iio_dev *indio_dev,
 		default:
 			switch (chan->channel) {
 			case 0:
-				if (phy->clk_ext_lo_rx)
+				if (phy->clk_ext_lo_rx){
 					ret = clk_set_parent(phy->clks[RX_RFPLL],
 							     res ? phy->clk_ext_lo_rx :
 							     phy->clks[RX_RFPLL_INT]);
+				}
 				else
 					ret = -ENODEV;
 				break;
@@ -9417,7 +9444,48 @@ static int ad9361_probe(struct spi_device *spi)
 		GPIOD_OUT_HIGH);
 	if (IS_ERR(phy->pdata->reset_gpio))
 		return PTR_ERR(phy->pdata->reset_gpio);
+/********************************************************************************/
+	phy->pdata->VCRX1_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX1_1",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCRX1_1_gpio))
+		return PTR_ERR(phy->pdata->VCRX1_1_gpio);
 
+	phy->pdata->VCRX1_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX1_2",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCRX1_2_gpio))
+		return PTR_ERR(phy->pdata->VCRX1_2_gpio);
+
+	phy->pdata->VCTX1_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX1_2",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCTX1_2_gpio))
+		return PTR_ERR(phy->pdata->VCTX1_2_gpio);
+
+	phy->pdata->VCTX1_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX1_1",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCTX1_1_gpio))
+		return PTR_ERR(phy->pdata->VCTX1_1_gpio);
+
+	phy->pdata->VCRX2_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX2_1",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCRX2_1_gpio))
+		return PTR_ERR(phy->pdata->VCRX2_1_gpio);
+
+	phy->pdata->VCRX2_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX2_2",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCRX2_2_gpio))
+		return PTR_ERR(phy->pdata->VCRX2_2_gpio);
+
+	phy->pdata->VCTX2_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX2_1",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCTX2_1_gpio))
+		return PTR_ERR(phy->pdata->VCTX2_1_gpio);
+
+	phy->pdata->VCTX2_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX2_2",
+		GPIOD_OUT_HIGH);
+	if (IS_ERR(phy->pdata->VCTX2_2_gpio))
+		return PTR_ERR(phy->pdata->VCTX2_2_gpio);
+
+/********************************************************************************/
 	/* Optional: next three used for MCS synchronization */
 	phy->pdata->sync_gpio = devm_gpiod_get_optional(&spi->dev, "sync",
 		GPIOD_OUT_LOW);
