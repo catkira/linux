@@ -371,6 +371,14 @@ struct ad9361_phy_platform_data {
 	struct tx_monitor_control txmon_ctrl;
 
 	struct gpio_desc			*reset_gpio;
+	struct gpio_desc			*VCRX1_1_gpio;
+	struct gpio_desc			*VCRX1_2_gpio;
+	struct gpio_desc			*VCTX1_2_gpio;
+	struct gpio_desc			*VCTX1_1_gpio;
+	struct gpio_desc			*VCRX2_1_gpio;
+	struct gpio_desc			*VCRX2_2_gpio;
+	struct gpio_desc			*VCTX2_1_gpio;
+	struct gpio_desc			*VCTX2_2_gpio;
 	/*  MCS SYNC */
 	struct gpio_desc			*sync_gpio;
 	struct gpio_desc			*cal_sw1_gpio;
