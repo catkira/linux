@@ -14,7 +14,7 @@
 #include <dt-bindings/iio/adc/adi,ad9361.h>
 
 / {
-	model = "Analog Devices PlutoSDR Rev.A (Z7010/AD9363)";
+	model = "MicroPhase ANTSDR E310";
 	memory {
 		device_type = "memory";
 		reg = <0x00000000 0x40000000>;

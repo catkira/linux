@@ -28,8 +28,8 @@
 	};
 
 	chosen {
-		bootargs = "earlycon";
-		stdout-path = "serial0:115200n8";
+		// bootargs = "console=ttyPS0,115200n8 root=/dev/ram rw earlyprintk"
+		stdout-path = "/amba@0/uart@E0000000";
 	};
 
 
@@ -62,6 +62,7 @@
 &uart0 {
 	status = "okay";
 };
+
 
 // &gem0 {
 // 	status = "okay";
