@@ -33,7 +33,7 @@
 
 
 / {
-	model = "Analog Devices PlutoSDR Rev.C (Z7010/AD9363)";
+	model = "MicroPhase ANTSDR E310";
 	
 	leds {
 		compatible = "gpio-leds";
@@ -48,6 +48,16 @@
 		compatible = "gpio-keys";
 		#address-cells = <1>;
 		#size-cells = <0>;
-		autorepeat;
+
+		button {
+			interrupt-parent = <&gpio0>;
+			interrupts = <14 IRQ_TYPE_EDGE_FALLING>;
+			label = "Button";
+			linux,code = <BTN_MISC>;
+		};
+
 	};
 };
+
+
+	

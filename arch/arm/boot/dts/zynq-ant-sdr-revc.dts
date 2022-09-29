@@ -62,7 +62,7 @@
 };
 
 / {
-	model = "Analog Devices PlutoSDR Rev.C (Z7010/AD9363)";
+	model = "MicroPhase ANTSDR E310";
 
 	leds {
 		compatible = "gpio-leds";
