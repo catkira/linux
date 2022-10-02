@@ -70,6 +70,7 @@
 #define AXI_DMAC_REG_Y_LENGTH		0x41c
 #define AXI_DMAC_REG_DEST_STRIDE	0x420
 #define AXI_DMAC_REG_SRC_STRIDE		0x424
+#define AXI_DMAC_REG_VALID_BYTES	0x448
 #define AXI_DMAC_REG_TRANSFER_DONE	0x428
 #define AXI_DMAC_REG_ACTIVE_TRANSFER_ID 0x42c
 #define AXI_DMAC_REG_STATUS		0x430
@@ -271,6 +272,7 @@ static void axi_dmac_start_transfer(struct axi_dmac_chan *chan)
 
 	axi_dmac_write(dmac, AXI_DMAC_REG_X_LENGTH, sg->x_len - 1);
 	axi_dmac_write(dmac, AXI_DMAC_REG_Y_LENGTH, sg->y_len - 1);
+	axi_dmac_write(dmac, AXI_DMAC_REG_VALID_BYTES, sg->x_len - 1);  // all bytes are valid for testing
 	axi_dmac_write(dmac, AXI_DMAC_REG_FLAGS, flags);
 	axi_dmac_write(dmac, AXI_DMAC_REG_START_TRANSFER, 1);
 }
