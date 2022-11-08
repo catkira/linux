@@ -43,6 +43,14 @@
 		};
 	};
 
+	ltc2630 {
+		compatible = "microphase,ltc2630";
+		status = "okay";
+		ext_ref_locked = <&gpio0 68 1>;
+		ext_ref_ispps = <&gpio0 69 0>;
+		ref_sel = <&gpio0 70 0>;
+	};
+
 
 };
 
