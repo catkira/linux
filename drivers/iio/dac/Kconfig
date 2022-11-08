@@ -335,6 +335,13 @@ config LTC1660
 	  To compile this driver as a module, choose M here: the
 	  module will be called ltc1660.
 
+config LTC2630_MICROPHASE
+	tristate "LTC 2630 DAC ref PLL"
+	depends on SPI
+	help
+	  Say yes here to build support for Linear Technology
+	  Ltc 2630 DAC ref pll use in microphase antsdr-E200/E310 V2
+
 config LTC2632
 	tristate "Linear Technology LTC2632-12/10/8 and similar DAC spi driver"
 	depends on SPI
