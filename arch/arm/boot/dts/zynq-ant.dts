@@ -7,7 +7,7 @@
  * Copyright (C) 2016-2019 MicroPhase Inc.
  */
 /dts-v1/;
-#include "zynq-ant-sdr.dtsi"
+#include "zynq-ant.dtsi"
 
 
 // &axi_i2c0 {
