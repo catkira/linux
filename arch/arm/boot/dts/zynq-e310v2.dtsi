@@ -14,7 +14,7 @@
 #include <dt-bindings/iio/adc/adi,ad9361.h>
 
 / {
-	model = "MicroPhase ANTSDR E200";
+	model = "MicroPhase ANTSDR E310V2";
 	memory {
 		device_type = "memory";
 		reg = <0x00000000 0x40000000>;

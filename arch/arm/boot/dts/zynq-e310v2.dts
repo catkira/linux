@@ -7,7 +7,7 @@
  * Copyright (C) 2016-2019 MicroPhase Inc.
  */
 /dts-v1/;
-#include "zynq-antsdre200.dtsi"
+#include "zynq-e310v2.dtsi"
 
 
 // &axi_i2c0 {
@@ -39,7 +39,7 @@
 		compatible = "gpio-leds";
 		led0 {
 			label = "led0:green";
-			gpios = <&gpio0 0 0>;
+			gpios = <&gpio0 15 0>;
 			linux,default-trigger = "heartbeat";
 		};
 	};
