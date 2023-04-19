@@ -180,6 +180,27 @@
 			};
 		};
 
+		rx_dma_5G: dma@7c460000 {
+			compatible = "adi,axi-dmac-1.00.a";
+			reg = <0x7c460000 0x10000>;
+			#dma-cells = <1>;
+			interrupts = <0 55 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkc 16>;
+
+			adi,channels {
+				#size-cells = <0>;
+				#address-cells = <1>;
+
+				dma-channel@0 {
+					reg = <0>;
+					adi,source-bus-width = <16>;
+					adi,source-bus-type = <1>;
+					adi,destination-bus-width = <64>;
+					adi,destination-bus-type = <0>;
+				};
+			};
+		};
+
 		cf_ad9364_adc_core_0: cf-ad9361-lpc@79020000 {
 			compatible = "adi,axi-ad9361-6.00.a";
 			reg = <0x79020000 0x6000>;
