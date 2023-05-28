@@ -77,8 +77,7 @@
 
 #define ADI_MAX_CHANNEL			128
 
-struct adc_chip_info {
-	int (*special_probe)(struct platform_device *pdev);
+struct sdr_chip_info {
 	bool has_no_sample_clk;
 	bool has_frontend;
 	const struct iio_chan_spec *channels;
@@ -118,7 +117,7 @@ struct axiadc_state {
 	}, \
 }
 
-static const struct iio_chan_spec cn0363_channels[] = {
+static const struct iio_chan_spec open5G_channels[] = {
 	CN0363_CHANNEL(0, IIO_ANGL, 0, 0, 32),
 	CN0363_CHANNEL(1, IIO_VOLTAGE, 0, 0, 24),
 	CN0363_CHANNEL(2, IIO_VOLTAGE, 1, 0, 32),
@@ -135,15 +134,12 @@ static const struct iio_chan_spec cn0363_channels[] = {
 	CN0363_CHANNEL(13, IIO_VOLTAGE, 7, IIO_MOD_Q, 32),
 };
 
-static const struct adc_chip_info cn0363_chip_info = {
-	.special_probe = NULL,
+static const struct sdr_chip_info open5G_phy_chip_info = {
 	.has_no_sample_clk = false,
 	.has_frontend = true,
-	.channels = cn0363_channels,
-	.num_channels = ARRAY_SIZE(cn0363_channels),
+	.channels = open5G_channels,
+	.num_channels = ARRAY_SIZE(open5G_channels),
 };
-
-static int axiadc_m2k_special_probe(struct platform_device *pdev);
 
 static const char * const m2k_samp_freq_available[] = {
 	"1000",
@@ -248,39 +244,6 @@ static const struct iio_chan_spec_ext_info m2k_chan_ext_info[] = {
 		.shift = 0,						\
 	},								\
 }
-
-static const struct adc_chip_info obs_rx_chip_info = {
-	.special_probe = NULL,
-	.has_no_sample_clk = false,
-	.channels = NULL,
-	.ctrl_flags = ADI_FORMAT_SIGNEXT | ADI_FORMAT_ENABLE,
-};
-
-static const struct iio_chan_spec adrv9002_rx_channels[] = {
-	ADRV9002_ADC_CHANNEL(0, IIO_MOD_I, 0),
-	ADRV9002_ADC_CHANNEL(0, IIO_MOD_Q, 1),
-};
-
-static const struct adc_chip_info adrv9002_rx_chip_info = {
-	.special_probe = NULL,
-	.has_no_sample_clk = false,
-	.channels = adrv9002_rx_channels,
-	.num_channels = ARRAY_SIZE(adrv9002_rx_channels),
-	.ctrl_flags = ADI_FORMAT_SIGNEXT | ADI_FORMAT_ENABLE,
-};
-
-static const struct iio_chan_spec m2k_adc_channels[] = {
-	M2K_ADC_CHANNEL(0),
-	M2K_ADC_CHANNEL(1),
-};
-
-static const struct adc_chip_info m2k_adc_chip_info = {
-	.special_probe = axiadc_m2k_special_probe,
-	.has_no_sample_clk = true,
-	.channels = m2k_adc_channels,
-	.num_channels = ARRAY_SIZE(m2k_adc_channels),
-	.ctrl_flags = ADI_FORMAT_SIGNEXT | ADI_FORMAT_ENABLE,
-};
 
 static inline void axiadc_write(struct axiadc_state *st, unsigned reg, unsigned val)
 {
@@ -488,47 +451,6 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
 	return -EINVAL;
 }
 
-static int axiadc_m2k_special_probe(struct platform_device *pdev)
-{
-	struct iio_dev *indio_dev = platform_get_drvdata(pdev);
-	struct axiadc_state *st = iio_priv(indio_dev);
-	struct resource *mem;
-	int i;
-
-	mem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-	if (mem) {
-		unsigned int val;
-
-		st->slave_regs = devm_ioremap_resource(&pdev->dev, mem);
-		if (IS_ERR(st->slave_regs))
-			return PTR_ERR(st->slave_regs);
-
-		val = cf_axi_dds_to_signed_mag_fmt(1, 0);
-		axiadc_slave_write(st, ADI_REG_CORRECTION_COEFFICIENT(0), val);
-		axiadc_slave_write(st, ADI_REG_CORRECTION_COEFFICIENT(1), val);
-	}
-
-	for (i = 0; i < indio_dev->num_channels; i++) {
-		if (indio_dev->channels[i].info_mask_separate &
-			BIT(IIO_CHAN_INFO_CALIBSCALE)) {
-			unsigned int chan = indio_dev->channels[i].channel;
-
-			axiadc_write(st, ADI_REG_CHAN_CNTRL_2(chan),
-				     0x40000000);
-			axiadc_write(st, ADI_REG_CHAN_CNTRL(chan),
-				     ADI_IQCOR_ENB);
-		}
-		if (indio_dev->channels[i].info_mask_separate &
-			BIT(IIO_CHAN_INFO_CALIBBIAS)) {
-			unsigned int chan = indio_dev->channels[i].channel;
-			//set initial claibration to neutral value
-			st->adc_calibbias[chan] = 2048;
-		}
-	}
-
-	return 0;
-}
-
 static int axiadc_write_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int val, int val2, long info)
 {
@@ -577,7 +499,7 @@ static int axiadc_write_raw(struct iio_dev *indio_dev,
 	return -EINVAL;
 }
 
-static int adc_reg_access(struct iio_dev *indio_dev,
+static int sdr_reg_access(struct iio_dev *indio_dev,
 			  unsigned int reg, unsigned int writeval,
 			  unsigned int *readval)
 {
@@ -600,29 +522,18 @@ static int adc_reg_access(struct iio_dev *indio_dev,
 	return 0;
 }
 
-static const struct iio_info adc_info = {
+static const struct iio_info sdr_info = {
 	.read_raw = axiadc_read_raw,
 	.write_raw = axiadc_write_raw,
-	.debugfs_reg_access = &adc_reg_access,
+	.debugfs_reg_access = &sdr_reg_access,
 	.update_scan_mode = axiadc_update_scan_mode,
 };
 
-static const struct of_device_id adc_of_match[] = {
-	{ .compatible = "adi,cn0363-adc-1.00.a", .data = &cn0363_chip_info },
-	{ .compatible = "adi,axi-ad9371-obs-1.0",
-				.data = &obs_rx_chip_info },
-	{ .compatible = "adi,m2k-adc-1.00.a", .data = &m2k_adc_chip_info },
-	{ .compatible = "adi,axi-adrv9009-obs-1.0",
-				.data = &obs_rx_chip_info },
-	{ .compatible = "adi,axi-adrv9009-obs-single-1.0",
-				.data = &obs_rx_chip_info },
-	{ .compatible = "adi,axi-adrv9002-rx2-1.0",
-				.data = &adrv9002_rx_chip_info },
-	{ .compatible = "adi,axi-adc-tpl-so-10.0.a",
-		.data = &obs_rx_chip_info },
+static const struct of_device_id sdr_of_match[] = {
+	{ .compatible = "catkira,open5G_phy-1.00.a", .data = &open5G_chip_info },
 	{ /* end of list */ },
 };
-MODULE_DEVICE_TABLE(of, adc_of_match);
+MODULE_DEVICE_TABLE(of, sdr_of_match);
 
 static void adc_fill_channel_data(struct iio_dev *indio_dev)
 {
@@ -676,16 +587,16 @@ static void adc_clk_disable(void *clk)
 	clk_disable_unprepare(clk);
 }
 
-static int adc_probe(struct platform_device *pdev)
+static int sdr_probe(struct platform_device *pdev)
 {
-	const struct adc_chip_info *info;
+	const struct sdr_chip_info *info;
 	const struct of_device_id *id;
 	struct iio_dev *indio_dev;
 	struct axiadc_state *st;
 	struct resource *mem;
 	int ret;
 
-	id = of_match_node(adc_of_match, pdev->dev.of_node);
+	id = of_match_node(sdr_of_match, pdev->dev.of_node);
 	if (!id)
 		return -ENODEV;
 
@@ -722,7 +633,7 @@ static int adc_probe(struct platform_device *pdev)
 	indio_dev->dev.parent = &pdev->dev;
 	indio_dev->name = pdev->dev.of_node->name;
 	indio_dev->modes = INDIO_DIRECT_MODE;
-	indio_dev->info = &adc_info;
+	indio_dev->info = &sdr_info;
 
 	/* Reset all HDL Cores */
 	axiadc_write(st, ADI_REG_RSTN, 0);
@@ -748,22 +659,15 @@ static int adc_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	/* handle special probe */
-	if (info->special_probe) {
-		ret = info->special_probe(pdev);
-		if (ret)
-			return ret;
-	}
-
 	return devm_iio_device_register(&pdev->dev, indio_dev);
 }
 
 static struct platform_driver adc_driver = {
 	.driver = {
 		.name = KBUILD_MODNAME,
-		.of_match_table = adc_of_match,
+		.of_match_table = sdr_of_match,
 	},
-	.probe	  = adc_probe,
+	.probe	  = sdr_probe,
 };
 
 module_platform_driver(adc_driver);
