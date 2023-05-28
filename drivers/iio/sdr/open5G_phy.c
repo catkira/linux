@@ -6,16 +6,6 @@
  * Licensed under the GPL-2.
  */
 
-/**
- * Note:
- * This driver is an old copy from the cf_axi_adc/axi-adc driver.
- * And some things were common with that driver. The cf_axi_adc/axi-adc
- * driver is a more complete implementation, while this one is just caring
- * about Motor Control.
- * The code duplication [here] is intentional, as we try to cleanup the
- * AXI ADC and decouple it from this driver.
- */
-
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/io.h>
@@ -99,7 +89,7 @@ struct axiadc_state {
 	unsigned int			adc_calibbias[2];
 };
 
-#define CN0363_CHANNEL(_address, _type, _ch, _mod, _rb) { \
+#define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
 	.type = _type, \
 	.indexed = 1, \
 	.channel = _ch, \
@@ -118,20 +108,20 @@ struct axiadc_state {
 }
 
 static const struct iio_chan_spec open5G_channels[] = {
-	CN0363_CHANNEL(0, IIO_ANGL, 0, 0, 32),
-	CN0363_CHANNEL(1, IIO_VOLTAGE, 0, 0, 24),
-	CN0363_CHANNEL(2, IIO_VOLTAGE, 1, 0, 32),
-	CN0363_CHANNEL(3, IIO_VOLTAGE, 2, IIO_MOD_I, 32),
-	CN0363_CHANNEL(4, IIO_VOLTAGE, 2, IIO_MOD_Q, 32),
-	CN0363_CHANNEL(5, IIO_VOLTAGE, 3, IIO_MOD_I, 32),
-	CN0363_CHANNEL(6, IIO_VOLTAGE, 3, IIO_MOD_Q, 32),
-	CN0363_CHANNEL(7, IIO_ANGL, 1, 0, 32),
-	CN0363_CHANNEL(8, IIO_VOLTAGE, 4, 0, 24),
-	CN0363_CHANNEL(9, IIO_VOLTAGE, 5, 0, 32),
-	CN0363_CHANNEL(10, IIO_VOLTAGE, 6, IIO_MOD_I, 32),
-	CN0363_CHANNEL(11, IIO_VOLTAGE, 6, IIO_MOD_Q, 32),
-	CN0363_CHANNEL(12, IIO_VOLTAGE, 7, IIO_MOD_I, 32),
-	CN0363_CHANNEL(13, IIO_VOLTAGE, 7, IIO_MOD_Q, 32),
+	SDR_CHANNEL(0, IIO_ANGL, 0, 0, 32),
+	SDR_CHANNEL(1, IIO_VOLTAGE, 0, 0, 24),
+	SDR_CHANNEL(2, IIO_VOLTAGE, 1, 0, 32),
+	SDR_CHANNEL(3, IIO_VOLTAGE, 2, IIO_MOD_I, 32),
+	SDR_CHANNEL(4, IIO_VOLTAGE, 2, IIO_MOD_Q, 32),
+	SDR_CHANNEL(5, IIO_VOLTAGE, 3, IIO_MOD_I, 32),
+	SDR_CHANNEL(6, IIO_VOLTAGE, 3, IIO_MOD_Q, 32),
+	SDR_CHANNEL(7, IIO_ANGL, 1, 0, 32),
+	SDR_CHANNEL(8, IIO_VOLTAGE, 4, 0, 24),
+	SDR_CHANNEL(9, IIO_VOLTAGE, 5, 0, 32),
+	SDR_CHANNEL(10, IIO_VOLTAGE, 6, IIO_MOD_I, 32),
+	SDR_CHANNEL(11, IIO_VOLTAGE, 6, IIO_MOD_Q, 32),
+	SDR_CHANNEL(12, IIO_VOLTAGE, 7, IIO_MOD_I, 32),
+	SDR_CHANNEL(13, IIO_VOLTAGE, 7, IIO_MOD_Q, 32),
 };
 
 static const struct sdr_chip_info open5G_phy_chip_info = {
@@ -209,41 +199,6 @@ static const struct iio_chan_spec_ext_info m2k_chan_ext_info[] = {
 	__reg;				\
 })
 
-#define M2K_ADC_CHANNEL(_ch) { \
-	.type = IIO_VOLTAGE, \
-	.indexed = 1, \
-	.channel = _ch, \
-	.address = _ch, \
-	.scan_index = _ch, \
-	.info_mask_separate = BIT(IIO_CHAN_INFO_CALIBSCALE) | \
-			BIT(IIO_CHAN_INFO_CALIBBIAS), \
-	.info_mask_shared_by_all = BIT(IIO_CHAN_INFO_SAMP_FREQ) | \
-			BIT(IIO_CHAN_INFO_OVERSAMPLING_RATIO), \
-	.ext_info = m2k_chan_ext_info, \
-	.scan_type = { \
-		.sign = 's', \
-		.realbits = 12, \
-		.storagebits = 16, \
-		.shift = 0, \
-		.endianness = IIO_LE, \
-	}, \
-}
-
-#define ADRV9002_ADC_CHANNEL(_chan, _mod, _si)	{			\
-	.type = IIO_VOLTAGE,						\
-	.indexed = 1,							\
-	.modified = 1,							\
-	.channel = _chan,						\
-	.channel2 = _mod,						\
-	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SAMP_FREQ),	\
-	.scan_index = _si,						\
-	.scan_type = {							\
-		.sign = 'S',						\
-		.realbits = 16,						\
-		.storagebits = 16,					\
-		.shift = 0,						\
-	},								\
-}
 
 static inline void axiadc_write(struct axiadc_state *st, unsigned reg, unsigned val)
 {
