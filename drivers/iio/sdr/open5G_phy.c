@@ -1,7 +1,7 @@
 /*
- * Analog Devices ADC Module
+ * open5G_phy
  *
- * Copyright 2013 Analog Devices Inc.
+ * Copyright 2023 Benjamin Menkuec
  *
  * Licensed under the GPL-2.
  */
@@ -13,8 +13,6 @@
 #include <linux/platform_device.h>
 #include <linux/of.h>
 
-#include <linux/clk.h>
-
 #include <linux/iio/iio.h>
 #include <linux/iio/sysfs.h>
 #include <linux/iio/buffer.h>
@@ -25,49 +23,9 @@
 #include <linux/iio/buffer-dma.h>
 #include <linux/iio/buffer-dmaengine.h>
 
-/* ADC Common */
-#define ADI_REG_RSTN			0x0040
-#define ADI_RSTN			(1 << 0)
-
-#define ADI_REG_STATUS			0x005C
-#define ADI_REG_DMA_STATUS		0x0088
-#define ADI_REG_USR_CNTRL_1		0x00A0
-
-/* ADC Channel */
-#define ADI_REG_CHAN_CNTRL(c)		(0x0400 + (c) * 0x40)
-#define ADI_IQCOR_ENB			(1 << 9)
-#define ADI_FORMAT_SIGNEXT		(1 << 6)
-#define ADI_FORMAT_ENABLE		(1 << 4)
-#define ADI_ENABLE			(1 << 0)
-
-#define ADI_REG_CHAN_CNTRL_2(c)		(0x0414 + (c) * 0x40)
-
-#define ADI_REG_CORRECTION_ENABLE 0x48
-#define ADI_REG_CORRECTION_COEFFICIENT(x) (0x4c + (x) * 4)
-
-#define ADI_USR_CHANMAX(x)		(((x) & 0xFF) << 0)
-#define ADI_TO_USR_CHANMAX(x)		(((x) >> 0) & 0xFF)
-
-#define ADI_REG_CHAN_USR_CNTRL_1(c)		(0x0420 + (c) * 0x40)
-#define ADI_USR_DATATYPE_BE			(1 << 25)
-#define ADI_USR_DATATYPE_SIGNED			(1 << 24)
-#define ADI_USR_DATATYPE_SHIFT(x)		(((x) & 0xFF) << 16)
-#define ADI_TO_USR_DATATYPE_SHIFT(x)		(((x) >> 16) & 0xFF)
-#define ADI_USR_DATATYPE_TOTAL_BITS(x)		(((x) & 0xFF) << 8)
-#define ADI_TO_USR_DATATYPE_TOTAL_BITS(x)	(((x) >> 8) & 0xFF)
-#define ADI_USR_DATATYPE_BITS(x)			(((x) & 0xFF) << 0)
-#define ADI_TO_USR_DATATYPE_BITS(x)		(((x) >> 0) & 0xFF)
-
-#define ADI_REG_CHAN_USR_CNTRL_2(c)		(0x0424 + (c) * 0x40)
-#define ADI_USR_DECIMATION_M(x)			(((x) & 0xFFFF) << 16)
-#define ADI_TO_USR_DECIMATION_M(x)		(((x) >> 16) & 0xFFFF)
-#define ADI_USR_DECIMATION_N(x)			(((x) & 0xFFFF) << 0)
-#define ADI_TO_USR_DECIMATION_N(x)		(((x) >> 0) & 0xFFFF)
-
-#define ADI_MAX_CHANNEL			128
+#define MAX_CHANNEL 128
 
 struct sdr_chip_info {
-	bool has_no_sample_clk;
 	const struct iio_chan_spec *channels;
 	unsigned int num_channels;
 	unsigned int ctrl_flags;
@@ -76,12 +34,11 @@ struct sdr_chip_info {
 struct axiadc_state {
 	void __iomem			*regs;
 	void __iomem			*slave_regs;
-	struct clk 			*clk;
 	/* protect against device accesses */
 	struct mutex			lock;
 	unsigned int			adc_def_output_mode;
 	unsigned int			max_usr_channel;
-	struct iio_chan_spec		channels[ADI_MAX_CHANNEL];
+	struct iio_chan_spec		channels[MAX_CHANNEL];
 };
 
 #define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
@@ -108,7 +65,6 @@ static const struct iio_chan_spec open5G_channels[] = {
 };
 
 static const struct sdr_chip_info open5G_chip_info = {
-	.has_no_sample_clk = false,
 	.channels = open5G_channels,
 	.num_channels = ARRAY_SIZE(open5G_channels),
 };
@@ -143,9 +99,6 @@ static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
 
 	iio_dmaengine_buffer_submit_block(queue, block, DMA_FROM_DEVICE);
 
-	axiadc_write(st, ADI_REG_STATUS, ~0);
-	axiadc_write(st, ADI_REG_DMA_STATUS, ~0);
-
 	return 0;
 }
 
@@ -166,28 +119,6 @@ static int axiadc_configure_ring_stream(struct iio_dev *indio_dev,
 
 	indio_dev->modes |= INDIO_BUFFER_HARDWARE;
 	iio_device_attach_buffer(indio_dev, buffer);
-
-	return 0;
-}
-
-static int axiadc_update_scan_mode(struct iio_dev *indio_dev,
-				   const unsigned long *scan_mask)
-{
-	struct axiadc_state *st = iio_priv(indio_dev);
-	unsigned int i, ctrl;
-
-	for (i = 0; i < indio_dev->masklength; i++) {
-		ctrl = axiadc_read(st, ADI_REG_CHAN_CNTRL(i));
-
-		if (test_bit(i, scan_mask))
-			ctrl |= ADI_ENABLE;
-		else
-			ctrl &= ~ADI_ENABLE;
-
-		ctrl |= st->adc_def_output_mode;
-
-		axiadc_write(st, ADI_REG_CHAN_CNTRL(i), ctrl);
-	}
 
 	return 0;
 }
@@ -259,7 +190,7 @@ static const struct iio_info sdr_info = {
 	.read_raw = axiadc_read_raw,
 	.write_raw = axiadc_write_raw,
 	.debugfs_reg_access = &sdr_reg_access,
-	.update_scan_mode = axiadc_update_scan_mode,
+	// .update_scan_mode = axiadc_update_scan_mode,
 };
 
 static const struct of_device_id sdr_of_match[] = {
@@ -267,11 +198,6 @@ static const struct of_device_id sdr_of_match[] = {
 	{ /* end of list */ },
 };
 MODULE_DEVICE_TABLE(of, sdr_of_match);
-
-static void adc_clk_disable(void *clk)
-{
-	clk_disable_unprepare(clk);
-}
 
 static const struct iio_chan_spec dummy_channels[] = {
 	{}
@@ -299,20 +225,6 @@ static int sdr_probe(struct platform_device *pdev)
 	st = iio_priv(indio_dev);
 	mutex_init(&st->lock);
 
-	st->clk = devm_clk_get(&pdev->dev, "sampl_clk");
-	if (IS_ERR(st->clk)) {
-		if (!info->has_no_sample_clk)
-			return PTR_ERR(st->clk);
-	} else {
-		ret = clk_prepare_enable(st->clk);
-		if (ret)
-			return ret;
-
-		ret = devm_add_action_or_reset(&pdev->dev, adc_clk_disable, st->clk);
-		if (ret)
-			return ret;
-	}
-
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	st->regs = devm_ioremap_resource(&pdev->dev, mem);
 	if (IS_ERR(st->regs))
@@ -326,8 +238,8 @@ static int sdr_probe(struct platform_device *pdev)
 	indio_dev->info = &sdr_info;
 
 	/* Reset all HDL Cores */
-	axiadc_write(st, ADI_REG_RSTN, 0);
-	axiadc_write(st, ADI_REG_RSTN, ADI_RSTN);
+	// axiadc_write(st, ADI_REG_RSTN, 0);
+	// axiadc_write(st, ADI_REG_RSTN, ADI_RSTN);
 
 	st->adc_def_output_mode = info->ctrl_flags;
 
@@ -341,7 +253,7 @@ static int sdr_probe(struct platform_device *pdev)
 	return devm_iio_device_register(&pdev->dev, indio_dev);
 }
 
-static struct platform_driver adc_driver = {
+static struct platform_driver sdr_driver = {
 	.driver = {
 		.name = KBUILD_MODNAME,
 		.of_match_table = sdr_of_match,
@@ -349,8 +261,8 @@ static struct platform_driver adc_driver = {
 	.probe	  = sdr_probe,
 };
 
-module_platform_driver(adc_driver);
+module_platform_driver(sdr_driver);
 
-MODULE_AUTHOR("Dragos Bogdan <dragos.bogdan@analog.com>");
-MODULE_DESCRIPTION("Analog Devices ADC");
+MODULE_AUTHOR("Benjamin Menkuec <benjamin@menkuec.de>");
+MODULE_DESCRIPTION("open5G_phy");
 MODULE_LICENSE("GPL v2");
