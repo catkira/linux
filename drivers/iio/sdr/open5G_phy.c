@@ -124,7 +124,7 @@ static const struct iio_chan_spec open5G_channels[] = {
 	SDR_CHANNEL(13, IIO_VOLTAGE, 7, IIO_MOD_Q, 32),
 };
 
-static const struct sdr_chip_info open5G_phy_chip_info = {
+static const struct sdr_chip_info open5G_chip_info = {
 	.has_no_sample_clk = false,
 	.has_frontend = true,
 	.channels = open5G_channels,
