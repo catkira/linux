@@ -206,7 +206,7 @@
 			reg = <0x7c444000 0x9000>;
 			dmas = <&rx_dma_5G 0>;
 			dma-names = "rx";
-        }
+        };
 
 		cf_ad9364_adc_core_0: cf-ad9361-lpc@79020000 {
 			compatible = "adi,axi-ad9361-6.00.a";
