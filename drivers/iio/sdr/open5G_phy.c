@@ -24,7 +24,6 @@
 #include <linux/iio/buffer_impl.h>
 #include <linux/iio/buffer-dma.h>
 #include <linux/iio/buffer-dmaengine.h>
-#include <linux/jesd204/adi-common.h>
 
 /* ADC Common */
 #define ADI_REG_RSTN			0x0040
@@ -82,11 +81,9 @@ struct axiadc_state {
 	struct clk 			*clk;
 	/* protect against device accesses */
 	struct mutex			lock;
-	unsigned int                    oversampling_ratio;
 	unsigned int			adc_def_output_mode;
 	unsigned int			max_usr_channel;
 	struct iio_chan_spec		channels[ADI_MAX_CHANNEL];
-	unsigned int			adc_calibbias[2];
 };
 
 #define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
@@ -253,9 +250,6 @@ static int axiadc_configure_ring_stream(struct iio_dev *indio_dev,
 {
 	struct iio_buffer *buffer;
 
-	if (dma_name == NULL)
-		dma_name = "rx";
-
 	buffer = devm_iio_dmaengine_buffer_alloc(indio_dev->dev.parent, dma_name,
 						 &axiadc_dma_buffer_ops, indio_dev);
 	if (IS_ERR(buffer))
@@ -387,18 +381,12 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
 			return -ENODEV;
 		}
 		return IIO_VAL_INT;
-	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
-		*val = st->oversampling_ratio;
-		return IIO_VAL_INT;
 	case IIO_CHAN_INFO_CALIBSCALE:
 		if (!st->slave_regs)
 			return -EINVAL;
 		reg = axiadc_slave_read(st,
 			       ADI_REG_CORRECTION_COEFFICIENT(chan->channel));
 		return cf_axi_dds_signed_mag_fmt_to_iio(reg, val, val2);
-	case IIO_CHAN_INFO_CALIBBIAS:
-		*val = st->adc_calibbias[chan->channel];
-		return IIO_VAL_INT;
 	default:
 		break;
 	}
@@ -419,12 +407,6 @@ static int axiadc_write_raw(struct iio_dev *indio_dev,
 		reg = M2K_ADC_DO_SAMP_FREQ_WRITE(val);
 		axiadc_slave_write(st, 0x44, reg);
 		return 0;
-	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
-		if (val == 0)
-			return -EINVAL;
-		st->oversampling_ratio = val;
-		axiadc_slave_write(st, 0x40, val - 1);
-		return 0;
 	case IIO_CHAN_INFO_CALIBSCALE:
 		if (!st->slave_regs)
 			return -EINVAL;
@@ -440,12 +422,6 @@ static int axiadc_write_raw(struct iio_dev *indio_dev,
 		axiadc_slave_write(st,
 				ADI_REG_CORRECTION_COEFFICIENT(chan->channel),
 				reg);
-		return 0;
-	case IIO_CHAN_INFO_CALIBBIAS:
-		if (val < 0 || val > 0xFFFF)
-			return -EINVAL;
-
-		st->adc_calibbias[chan->channel] = val;
 		return 0;
 	default:
 		break;
@@ -493,18 +469,10 @@ MODULE_DEVICE_TABLE(of, sdr_of_match);
 static void adc_fill_channel_data(struct iio_dev *indio_dev)
 {
 	struct axiadc_state *st = iio_priv(indio_dev);
-	unsigned int usr_ctrl, jesd_np;
+	unsigned int usr_ctrl;
 	int i;
 
 	st->max_usr_channel = ADI_USR_CHANMAX(axiadc_read(st, ADI_REG_USR_CNTRL_1));
-
-	/*
-	 * In case JESD TPL (up_tpl_common) is available use
-	 * JESD_NP to set realbits
-	 */
-	jesd_np = axiadc_read(st, ADI_JESD204_REG_TPL_DESCRIPTOR_2);
-	if (jesd_np != 0xDEADDEAD)
-		jesd_np = ADI_JESD204_TPL_TO_NP(jesd_np);
 
 	if (st->max_usr_channel == 0)
 		dev_warn(indio_dev->dev.parent,
@@ -524,7 +492,7 @@ static void adc_fill_channel_data(struct iio_dev *indio_dev)
 		st->channels[i].scan_type.sign =
 			(usr_ctrl & ADI_USR_DATATYPE_SIGNED) ? 's' : 'u';
 		st->channels[i].scan_type.realbits =
-			jesd_np ? jesd_np : ADI_TO_USR_DATATYPE_BITS(usr_ctrl);
+			ADI_TO_USR_DATATYPE_BITS(usr_ctrl);
 		st->channels[i].scan_type.storagebits =
 			ADI_TO_USR_DATATYPE_TOTAL_BITS(usr_ctrl);
 		st->channels[i].scan_type.shift =
