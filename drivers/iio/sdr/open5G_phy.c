@@ -40,7 +40,6 @@ struct sdr_chip_info {
 
 struct axiadc_state {
 	void __iomem			*regs;
-	void __iomem			*slave_regs;
 	/* protect against device accesses */
 	struct mutex			lock;
 	unsigned int			max_usr_channel;
@@ -85,16 +84,6 @@ static inline void axiadc_write(struct axiadc_state *st, unsigned reg, unsigned 
 static inline unsigned int axiadc_read(struct axiadc_state *st, unsigned reg)
 {
 	return ioread32(st->regs + reg);
-}
-
-static inline void axiadc_slave_write(struct axiadc_state *st, unsigned reg, unsigned val)
-{
-	iowrite32(val, st->slave_regs + reg);
-}
-
-static inline unsigned int axiadc_slave_read(struct axiadc_state *st, unsigned reg)
-{
-	return ioread32(st->slave_regs + reg);
 }
 
 static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
@@ -178,17 +167,10 @@ static int sdr_reg_access(struct iio_dev *indio_dev,
 	struct axiadc_state *st = iio_priv(indio_dev);
 
 	mutex_lock(&st->lock);
-	if (st->slave_regs && (reg & 0x80000000)) {
-		if (readval == NULL)
-			axiadc_slave_write(st, (reg & 0xffff), writeval);
-		else
-			*readval = axiadc_slave_read(st, (reg & 0xffff));
-	} else {
-		if (readval == NULL)
-			axiadc_write(st, reg & 0xFFFF, writeval);
-		else
-			*readval = axiadc_read(st, reg & 0xFFFF);
-	}
+    if (readval == NULL)
+        axiadc_write(st, reg & 0xFFFF, writeval);
+    else
+        *readval = axiadc_read(st, reg & 0xFFFF);
 	mutex_unlock(&st->lock);
 
 	return 0;
