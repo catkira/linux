@@ -23,12 +23,19 @@
 #include <linux/iio/buffer-dma.h>
 #include <linux/iio/buffer-dmaengine.h>
 
+#define AXI_REG_VERSION 0
 #define MAX_CHANNEL 128
+
+#define AXI_PCORE_VER(major, minor, patch)	\
+	(((major) << 16) | ((minor) << 8) | (patch))
+#define AXI_PCORE_VER_MAJOR(version)	(((version) >> 16) & 0xff)
+#define AXI_PCORE_VER_MINOR(version)	(((version) >> 8) & 0xff)
+#define AXI_PCORE_VER_PATCH(version)	((version) & 0xff)
 
 struct sdr_chip_info {
 	const struct iio_chan_spec *channels;
 	unsigned int num_channels;
-	unsigned int ctrl_flags;
+    unsigned int version;
 };
 
 struct axiadc_state {
@@ -36,9 +43,9 @@ struct axiadc_state {
 	void __iomem			*slave_regs;
 	/* protect against device accesses */
 	struct mutex			lock;
-	unsigned int			adc_def_output_mode;
 	unsigned int			max_usr_channel;
 	struct iio_chan_spec		channels[MAX_CHANNEL];
+    unsigned int            pcore_version;
 };
 
 #define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
@@ -67,6 +74,7 @@ static const struct iio_chan_spec open5G_channels[] = {
 static const struct sdr_chip_info open5G_chip_info = {
 	.channels = open5G_channels,
 	.num_channels = ARRAY_SIZE(open5G_channels),
+    .version = AXI_PCORE_VER(1, 0, 'a'),
 };
 
 static inline void axiadc_write(struct axiadc_state *st, unsigned reg, unsigned val)
@@ -241,7 +249,18 @@ static int sdr_probe(struct platform_device *pdev)
 	// axiadc_write(st, ADI_REG_RSTN, 0);
 	// axiadc_write(st, ADI_REG_RSTN, ADI_RSTN);
 
-	st->adc_def_output_mode = info->ctrl_flags;
+    st->pcore_version = axiadc_read(st, AXI_REG_VERSION);
+	if (AXI_PCORE_VER_MAJOR(st->pcore_version) >
+		AXI_PCORE_VER_MAJOR(info->version)) {
+		dev_err(&pdev->dev, "Major version mismatch between PCORE and driver. Driver expected %d.%.2d.%c, PCORE reported %d.%.2d.%c\n",
+			AXI_PCORE_VER_MAJOR(info->version),
+			AXI_PCORE_VER_MINOR(info->version),
+			AXI_PCORE_VER_PATCH(info->version),
+			AXI_PCORE_VER_MAJOR(st->pcore_version),
+			AXI_PCORE_VER_MINOR(st->pcore_version),
+			AXI_PCORE_VER_PATCH(st->pcore_version));
+		return -ENODEV;
+	}
 
     indio_dev->channels = info->channels;
     indio_dev->num_channels = info->num_channels;
