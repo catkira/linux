@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# SDRs
+#
+# When adding new entries keep the list in alphabetical order
+
+menu "SDRs"
+
+config OPEN5G_PHY
+	tristate "Open5G_phy"
+	select IIO_BUFFER
+	select IIO_TRIGGERED_BUFFER
+	help
+	  Say yes to choose the Open5G_phy.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called open5G_phy.
+
+endmenu
