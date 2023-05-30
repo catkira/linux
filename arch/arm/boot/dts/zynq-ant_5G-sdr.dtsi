@@ -184,7 +184,7 @@
 			compatible = "adi,axi-dmac-1.00.a";
 			reg = <0x7c460000 0x10000>;
 			#dma-cells = <1>;
-			interrupts = <0 55 IRQ_TYPE_LEVEL_HIGH>;
+			interrupts = <0 58 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clkc 16>;
 
 			adi,channels {
