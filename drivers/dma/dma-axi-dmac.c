@@ -441,6 +441,7 @@ static irqreturn_t axi_dmac_interrupt_handler(int irq, void *devid)
 
 static int axi_dmac_terminate_all(struct dma_chan *c)
 {
+    printk(" -- axi_dmac_terminate_all --");
 	struct axi_dmac_chan *chan = to_axi_dmac_chan(c);
 	struct axi_dmac *dmac = chan_to_axi_dmac(chan);
 	unsigned long flags;
