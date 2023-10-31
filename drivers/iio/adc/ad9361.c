@@ -7387,40 +7387,10 @@ static ssize_t ad9361_phy_lo_write(struct iio_dev *indio_dev,
 		case 0:
 			ret = clk_set_rate(phy->clks[RX_RFPLL],
 					ad9361_to_clk(readin));
-					if(ad9361_to_clk(readin)>1500000000)
-					{
-					gpiod_set_value_cansleep(phy->pdata->VCRX1_1_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCRX2_2_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCRX1_2_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCRX2_1_gpio, 0);
-					}
-					else
-					{
-					gpiod_set_value_cansleep(phy->pdata->VCRX1_1_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCRX2_2_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCRX1_2_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCRX2_1_gpio, 1);
-					}
-				
-/******************************切换滤波器频段**********************************/
 			break;
 		case 1:
 			ret = clk_set_rate(phy->clks[TX_RFPLL],
 					ad9361_to_clk(readin));
-			if(ad9361_to_clk(readin)>1500000000)
-					{
-					gpiod_set_value_cansleep(phy->pdata->VCTX1_2_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCTX2_1_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCTX1_1_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCTX2_2_gpio, 0);
-					}
-					else
-					{
-					gpiod_set_value_cansleep(phy->pdata->VCTX1_2_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCTX2_1_gpio, 0);
-					gpiod_set_value_cansleep(phy->pdata->VCTX1_1_gpio, 1);
-					gpiod_set_value_cansleep(phy->pdata->VCTX2_2_gpio, 1);
-					}
 			if (test_bit(0, &st->flags))
 				wait_for_completion(&phy->complete);
 
@@ -9498,48 +9468,7 @@ static int ad9361_probe(struct spi_device *spi)
 		GPIOD_OUT_HIGH);
 	if (IS_ERR(phy->pdata->reset_gpio))
 		return PTR_ERR(phy->pdata->reset_gpio);
-/********************************************************************************/
-	phy->pdata->VCRX1_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX1_1",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCRX1_1_gpio))
-		return PTR_ERR(phy->pdata->VCRX1_1_gpio);
 
-	phy->pdata->VCRX1_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX1_2",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCRX1_2_gpio))
-		return PTR_ERR(phy->pdata->VCRX1_2_gpio);
-
-	phy->pdata->VCTX1_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX1_2",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCTX1_2_gpio))
-		return PTR_ERR(phy->pdata->VCTX1_2_gpio);
-
-	phy->pdata->VCTX1_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX1_1",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCTX1_1_gpio))
-		return PTR_ERR(phy->pdata->VCTX1_1_gpio);
-
-	phy->pdata->VCRX2_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX2_1",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCRX2_1_gpio))
-		return PTR_ERR(phy->pdata->VCRX2_1_gpio);
-
-	phy->pdata->VCRX2_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCRX2_2",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCRX2_2_gpio))
-		return PTR_ERR(phy->pdata->VCRX2_2_gpio);
-
-	phy->pdata->VCTX2_1_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX2_1",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCTX2_1_gpio))
-		return PTR_ERR(phy->pdata->VCTX2_1_gpio);
-
-	phy->pdata->VCTX2_2_gpio = devm_gpiod_get_optional(&spi->dev, "VCTX2_2",
-		GPIOD_OUT_HIGH);
-	if (IS_ERR(phy->pdata->VCTX2_2_gpio))
-		return PTR_ERR(phy->pdata->VCTX2_2_gpio);
-
-/********************************************************************************/
 	/* Optional: next three used for MCS synchronization */
 	phy->pdata->sync_gpio = devm_gpiod_get_optional(&spi->dev, "sync",
 		GPIOD_OUT_LOW);
