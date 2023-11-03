@@ -201,6 +201,27 @@
 			};
 		};
 
+		tx_dma_5G: dma@7c480000 {
+			compatible = "adi,axi-dmac-1.00.a";
+			reg = <0x7c480000 0x10000>;
+			#dma-cells = <1>;
+			interrupts = <0 54 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkc 16>;
+
+			adi,channels {
+				#size-cells = <0>;
+				#address-cells = <1>;
+
+				dma-channel@0 {
+					reg = <0>;
+					adi,source-bus-width = <64>;
+					adi,source-bus-type = <0>;
+					adi,destination-bus-width = <16>;
+					adi,destination-bus-type = <1>;
+				};
+			};
+		};
+
         open5G_phy: open5G_phy@ {
 			compatible = "catkira,open5G_phy-1.00.a";
 			reg = <0x7c444000 0x9000>;
