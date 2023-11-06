@@ -231,7 +231,7 @@
 
         skynet_tx: skynet_tx@ {
 			compatible = "catkira,skynet_tx-1.00.a";
-			reg = <0x7c44A000 0x9000>;
+			reg = <0x7c4A0000 0x9000>;
 			dmas = <&tx_dma_5G 0>;
 			dma-names = "tx";
         };
