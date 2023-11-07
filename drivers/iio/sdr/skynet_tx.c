@@ -104,17 +104,17 @@ static const struct iio_dma_buffer_ops axiadc_dma_buffer_ops = {
 	.abort = iio_dmaengine_buffer_abort,
 };
 
-static int axiadc_configure_ring_stream(struct iio_dev *indio_dev,
-	const char *dma_name)
+static int configure_buffer(struct iio_dev *indio_dev)
 {
 	struct iio_buffer *buffer;
 
-	buffer = devm_iio_dmaengine_buffer_alloc(indio_dev->dev.parent, dma_name,
+	buffer = devm_iio_dmaengine_buffer_alloc(indio_dev->dev.parent, "tx",
 						 &axiadc_dma_buffer_ops, indio_dev);
 	if (IS_ERR(buffer))
 		return PTR_ERR(buffer);
 
 	indio_dev->modes |= INDIO_BUFFER_HARDWARE;
+	indio_dev->direction = IIO_DEVICE_DIRECTION_OUT;
 	iio_device_attach_buffer(indio_dev, buffer);
 
 	return 0;
@@ -247,9 +247,16 @@ static int sdr_probe(struct platform_device *pdev)
     indio_dev->channels = info->channels;
     indio_dev->num_channels = info->num_channels;
 
-	ret = axiadc_configure_ring_stream(indio_dev, "rx");
+	ret = configure_buffer(indio_dev);
 	if (ret)
 		return ret;
+
+	dev_info(&pdev->dev,
+		 "Skynet TX (%d.%.2d.%c) at 0x%08llX mapped to 0x%p\n",
+		 AXI_PCORE_VER_MAJOR(st->pcore_version),
+		 AXI_PCORE_VER_MINOR(st->pcore_version),
+		 AXI_PCORE_VER_PATCH(st->pcore_version),
+		 (unsigned long long)mem->start, st->regs);
 
 	return devm_iio_device_register(&pdev->dev, indio_dev);
 }
