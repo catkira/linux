@@ -176,10 +176,49 @@ static int sdr_reg_access(struct iio_dev *indio_dev,
 	return 0;
 }
 
+static ssize_t show_source_select(struct device *dev,
+			   struct device_attribute *attr,
+			   char *buf)
+{
+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
+	struct axiadc_state *st = iio_priv(indio_dev);
+    unsigned int readval = axiadc_read(st, 0x0014);
+	
+    return sysfs_emit(buf, "%d\n", readval);
+}
+
+static ssize_t set_source_select(struct device *dev,
+			  struct device_attribute *attr,
+			  const char *buf,
+			  size_t len)
+{
+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
+	struct axiadc_state *st = iio_priv(indio_dev);
+    unsigned int writeval;
+    int ret = kstrtouint(buf, 10, &writeval);
+    if (ret)
+		return ret;
+    axiadc_write(st, 0x0014, writeval);
+	return 0;
+}
+
+static IIO_DEVICE_ATTR(source_select, S_IWUSR | S_IRUGO,
+	show_source_select, set_source_select, 0);
+
+static struct attribute *skynet_tx_attributes[] = {
+	&iio_dev_attr_source_select.dev_attr.attr,
+	NULL,
+};
+
+static const struct attribute_group skynet_tx_group = {
+	.attrs = skynet_tx_attributes,
+};
+
 static const struct iio_info sdr_info = {
 	.read_raw = axiadc_read_raw,
 	.write_raw = axiadc_write_raw,
 	.debugfs_reg_access = &sdr_reg_access,
+    .attrs = &skynet_tx_group,
 	// .update_scan_mode = axiadc_update_scan_mode,
 };
 
