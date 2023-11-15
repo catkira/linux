@@ -199,7 +199,7 @@ static ssize_t set_source_select(struct device *dev,
     if (ret)
 		return ret;
     axiadc_write(st, 0x0014, writeval);
-	return 0;
+	return len;
 }
 
 static IIO_DEVICE_ATTR(source_select, S_IWUSR | S_IRUGO,
