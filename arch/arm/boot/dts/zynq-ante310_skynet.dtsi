@@ -214,7 +214,7 @@
 
 				dma-channel@0 {
 					reg = <0>;
-					adi,source-bus-width = <64>;
+					adi,source-bus-width = <32>;
 					adi,source-bus-type = <0>;
 					adi,destination-bus-width = <16>;
 					adi,destination-bus-type = <1>;

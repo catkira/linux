@@ -47,18 +47,15 @@ struct axiadc_state {
     unsigned int            pcore_version;
 };
 
-#define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
-	.type = _type, \
+#define SKYNET_TX_CHAN(_ch) { \
+	.type = IIO_VOLTAGE, \
 	.indexed = 1, \
 	.channel = _ch, \
-	.modified = (_mod == 0) ? 0 : 1, \
-	.channel2 = _mod, \
-	.info_mask_shared_by_all = BIT(IIO_CHAN_INFO_SAMP_FREQ), \
-	.address = _address, \
-	.scan_index = _address, \
+	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SAMP_FREQ), \
+	.output = 1, \
 	.scan_type = { \
-		.sign = (_type == IIO_ANGL) ? 'u' : 's', \
-		.realbits = _rb, \
+		.sign = 'u', \
+		.realbits = 32, \
 		.storagebits = 32, \
 		.shift = 0, \
 		.endianness = IIO_LE, \
@@ -66,8 +63,7 @@ struct axiadc_state {
 }
 
 static const struct iio_chan_spec skynet_tx_channels[] = {
-	SDR_CHANNEL(0, IIO_ANGL, 0, 0, 32),
-	SDR_CHANNEL(1, IIO_VOLTAGE, 0, 0, 24)
+	SKYNET_TX_CHAN(0)
 };
 
 static const struct sdr_chip_info skynet_tx_chip_info = {
@@ -75,6 +71,7 @@ static const struct sdr_chip_info skynet_tx_chip_info = {
 	.num_channels = ARRAY_SIZE(skynet_tx_channels),
     .version = AXI_PCORE_VER(1, 0, 'a'),
 };
+
 
 static inline void axiadc_write(struct axiadc_state *st, unsigned reg, unsigned val)
 {
@@ -86,7 +83,7 @@ static inline unsigned int axiadc_read(struct axiadc_state *st, unsigned reg)
 	return ioread32(st->regs + reg);
 }
 
-static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
+static int skynet_tx_hw_submit_block(struct iio_dma_buffer_queue *queue,
 	struct iio_dma_buffer_block *block)
 {
 	struct iio_dev *indio_dev = queue->driver_data;
@@ -94,13 +91,11 @@ static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
 
 	block->block.bytes_used = block->block.size;
 
-	iio_dmaengine_buffer_submit_block(queue, block, DMA_FROM_DEVICE);
-
-	return 0;
+	return iio_dmaengine_buffer_submit_block(queue, block, DMA_TO_DEVICE);
 }
 
-static const struct iio_dma_buffer_ops axiadc_dma_buffer_ops = {
-	.submit = axiadc_hw_submit_block,
+static const struct iio_dma_buffer_ops skynet_tx_buffer_ops = {
+	.submit = skynet_tx_hw_submit_block,
 	.abort = iio_dmaengine_buffer_abort,
 };
 
@@ -109,7 +104,7 @@ static int configure_buffer(struct iio_dev *indio_dev)
 	struct iio_buffer *buffer;
 
 	buffer = devm_iio_dmaengine_buffer_alloc(indio_dev->dev.parent, "tx",
-						 &axiadc_dma_buffer_ops, indio_dev);
+						 &skynet_tx_buffer_ops, indio_dev);
 	if (IS_ERR(buffer))
 		return PTR_ERR(buffer);
 
@@ -120,7 +115,7 @@ static int configure_buffer(struct iio_dev *indio_dev)
 	return 0;
 }
 
-static int axiadc_read_raw(struct iio_dev *indio_dev,
+static int skynet_tx_read_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int *val, int *val2, long info)
 {
 	struct axiadc_state *st = iio_priv(indio_dev);
@@ -131,10 +126,6 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
         *val = 6969;
         *val2 = 6969;
 		return IIO_VAL_INT;
-	case IIO_CHAN_INFO_CALIBSCALE:
-        *val = 69;
-        *val2 = 69;
-		return IIO_VAL_INT;
 	default:
 		break;
 	}
@@ -142,7 +133,7 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
 	return -EINVAL;
 }
 
-static int axiadc_write_raw(struct iio_dev *indio_dev,
+static int skynet_tx_write_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int val, int val2, long info)
 {
 	// struct axiadc_state *st = iio_priv(indio_dev);
@@ -150,8 +141,6 @@ static int axiadc_write_raw(struct iio_dev *indio_dev,
 
 	switch (info) {
 	case IIO_CHAN_INFO_SAMP_FREQ:
-		return 0;
-	case IIO_CHAN_INFO_CALIBSCALE:
 		return 0;
 	default:
 		break;
@@ -176,13 +165,14 @@ static int sdr_reg_access(struct iio_dev *indio_dev,
 	return 0;
 }
 
-static ssize_t show_source_select(struct device *dev,
+static ssize_t show_reg(struct device *dev,
 			   struct device_attribute *attr,
 			   char *buf)
 {
 	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 	struct axiadc_state *st = iio_priv(indio_dev);
-    unsigned int readval = axiadc_read(st, 0x0014);
+	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
+    unsigned int readval = axiadc_read(st, (u32)this_attr->address);
 	
     return sysfs_emit(buf, "%d\n", readval);
 }
@@ -203,10 +193,27 @@ static ssize_t set_source_select(struct device *dev,
 }
 
 static IIO_DEVICE_ATTR(source_select, S_IWUSR | S_IRUGO,
-	show_source_select, set_source_select, 0);
+	show_reg, set_source_select, 0x14);
+
+static IIO_DEVICE_ATTR(pdsch_encoder_in_state, S_IRUGO,
+	show_reg, NULL, 0x18);
+
+static IIO_DEVICE_ATTR(pdsch_encoder_out_state, S_IRUGO,
+	show_reg, NULL, 0x1c);
+
+static IIO_DEVICE_ATTR(pdsch_encoder_out_2_state, S_IRUGO,
+	show_reg, NULL, 0x20);
+
+static IIO_DEVICE_ATTR(pdsch_encoder_has_data, S_IRUGO,
+	show_reg, NULL, 0x24);
+
 
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_out_state.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_out_2_state.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_has_data.dev_attr.attr,
 	NULL,
 };
 
@@ -215,8 +222,8 @@ static const struct attribute_group skynet_tx_group = {
 };
 
 static const struct iio_info sdr_info = {
-	.read_raw = axiadc_read_raw,
-	.write_raw = axiadc_write_raw,
+	.read_raw = skynet_tx_read_raw,
+	.write_raw = skynet_tx_write_raw,
 	.debugfs_reg_access = &sdr_reg_access,
     .attrs = &skynet_tx_group,
 	// .update_scan_mode = axiadc_update_scan_mode,
