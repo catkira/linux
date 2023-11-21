@@ -210,7 +210,10 @@ static IIO_DEVICE_ATTR(pdsch_encoder_has_data, S_IRUGO,
 static IIO_DEVICE_ATTR(underflow, S_IRUGO,
 	show_reg, NULL, 0x28);
 
-static IIO_DEVICE_ATTR(pdsch_encoder_blk_cnt, S_IRUGO,
+static IIO_DEVICE_ATTR(pdsch_encoder_blk_cnt_in, S_IRUGO,
+	show_reg, NULL, 0x30);
+
+static IIO_DEVICE_ATTR(pdsch_encoder_blk_cnt_out, S_IRUGO,
 	show_reg, NULL, 0x2c);
 
 static struct attribute *skynet_tx_attributes[] = {
@@ -220,7 +223,8 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_pdsch_encoder_out_2_state.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_has_data.dev_attr.attr,
 	&iio_dev_attr_underflow.dev_attr.attr,
-	&iio_dev_attr_pdsch_encoder_blk_cnt.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_blk_cnt_in.dev_attr.attr,
+	&iio_dev_attr_pdsch_encoder_blk_cnt_out.dev_attr.attr,
 	NULL,
 };
 
