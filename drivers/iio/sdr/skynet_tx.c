@@ -222,6 +222,18 @@ static IIO_DEVICE_ATTR(ldpc_cnt_in, S_IRUGO,
 static IIO_DEVICE_ATTR(ldpc_cnt_out, S_IRUGO,
 	show_reg, NULL, 0x38);
 
+static IIO_DEVICE_ATTR(ldpc_1st_in_byte, S_IRUGO,
+	show_reg, NULL, 0x3C);
+
+static IIO_DEVICE_ATTR(ldpc_1st_out_byte, S_IRUGO,
+	show_reg, NULL, 0x40);
+
+static IIO_DEVICE_ATTR(ldpc_1st_in_byte2, S_IRUGO,
+	show_reg, NULL, 0x41);
+
+static IIO_DEVICE_ATTR(ldpc_1st_out_byte2, S_IRUGO,
+	show_reg, NULL, 0x42);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -233,6 +245,10 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_pdsch_encoder_blk_cnt_out.dev_attr.attr,
 	&iio_dev_attr_ldpc_cnt_in.dev_attr.attr,
 	&iio_dev_attr_ldpc_cnt_out.dev_attr.attr,
+	&iio_dev_attr_ldpc_1st_in_byte.dev_attr.attr,
+	&iio_dev_attr_ldpc_1st_out_byte.dev_attr.attr,
+	&iio_dev_attr_ldpc_1st_in_byte2.dev_attr.attr,
+	&iio_dev_attr_ldpc_1st_out_byte2.dev_attr.attr,
 	NULL,
 };
 
