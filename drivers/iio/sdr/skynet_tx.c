@@ -86,7 +86,7 @@ static inline unsigned int axiadc_read(struct axiadc_state *st, unsigned reg)
 static int skynet_tx_hw_submit_block(struct iio_dma_buffer_queue *queue,
 	struct iio_dma_buffer_block *block)
 {
-	struct iio_dev *indio_dev = queue->driver_data;
+	// struct iio_dev *indio_dev = queue->driver_data;
 	// struct axiadc_state *st = iio_priv(indio_dev);
 
 	block->block.bytes_used = block->block.size;
@@ -118,7 +118,7 @@ static int configure_buffer(struct iio_dev *indio_dev)
 static int skynet_tx_read_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int *val, int *val2, long info)
 {
-	struct axiadc_state *st = iio_priv(indio_dev);
+	// struct axiadc_state *st = iio_priv(indio_dev);
 	// uint32_t reg;
 
 	switch (info) {
@@ -156,10 +156,12 @@ static int sdr_reg_access(struct iio_dev *indio_dev,
 	struct axiadc_state *st = iio_priv(indio_dev);
 
 	mutex_lock(&st->lock);
-    if (readval == NULL)
+    if (readval == NULL) {
         axiadc_write(st, reg & 0xFFFF, writeval);
-    else
+    }
+    else {
         *readval = axiadc_read(st, reg & 0xFFFF);
+    }
 	mutex_unlock(&st->lock);
 
 	return 0;
@@ -234,6 +236,9 @@ static IIO_DEVICE_ATTR(ldpc_1st_in_byte2, S_IRUGO,
 static IIO_DEVICE_ATTR(ldpc_1st_out_byte2, S_IRUGO,
 	show_reg, NULL, 0x42);
 
+static IIO_DEVICE_ATTR(ssb_sym, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x43);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -249,6 +254,7 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_ldpc_1st_out_byte.dev_attr.attr,
 	&iio_dev_attr_ldpc_1st_in_byte2.dev_attr.attr,
 	&iio_dev_attr_ldpc_1st_out_byte2.dev_attr.attr,
+	&iio_dev_attr_ssb_sym.dev_attr.attr,
 	NULL,
 };
 
