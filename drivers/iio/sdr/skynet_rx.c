@@ -3,7 +3,6 @@
  *
  * Copyright 2023 Benjamin Menkuec
  *
- * Licensed under the GPL-2.
  */
 
 #include <linux/module.h>
@@ -265,5 +264,5 @@ static struct platform_driver sdr_driver = {
 module_platform_driver(sdr_driver);
 
 MODULE_AUTHOR("Benjamin Menkuec <benjamin@menkuec.de>");
-MODULE_DESCRIPTION("open5G_phy");
-MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("SkyNET RX");
+MODULE_LICENSE("closed source");

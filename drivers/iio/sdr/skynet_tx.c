@@ -3,7 +3,6 @@
  *
  * Copyright 2023 Benjamin Menkuec
  *
- * Licensed under the GPL-2.
  */
 
 #include <linux/module.h>
