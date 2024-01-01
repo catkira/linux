@@ -183,7 +183,7 @@ static const struct iio_info sdr_info = {
 };
 
 static const struct of_device_id sdr_of_match[] = {
-	{ .compatible = "catkira,open5G_phy-1.00.a", .data = &open5G_chip_info },
+	{ .compatible = "catkira,skynet_rx-1.00.a", .data = &open5G_chip_info },
 	{ /* end of list */ },
 };
 MODULE_DEVICE_TABLE(of, sdr_of_match);

@@ -262,8 +262,8 @@
 			};
 		};
 
-        open5G_phy: open5G_phy@ {
-			compatible = "catkira,open5G_phy-1.00.a";
+        skynet_rx: skynet_rx@ {
+			compatible = "catkira,skynet_rx-1.00.a";
 			reg = <0x7c444000 0x9000>;
 			dmas = <&rx_dma_5G 0>;
 			dma-names = "rx";
