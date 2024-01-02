@@ -1,5 +1,5 @@
 /*
- * open5G_phy
+ * SkyNET_RX
  *
  * Copyright 2023 Benjamin Menkuec
  *
@@ -46,32 +46,28 @@ struct axiadc_state {
     unsigned int            pcore_version;
 };
 
-#define SDR_CHANNEL(_address, _type, _ch, _mod, _rb) { \
-	.type = _type, \
+#define SKYNET_RX_CHAN(_ch) { \
+	.type = IIO_VOLTAGE, \
 	.indexed = 1, \
 	.channel = _ch, \
-	.modified = (_mod == 0) ? 0 : 1, \
-	.channel2 = _mod, \
-	.info_mask_shared_by_all = BIT(IIO_CHAN_INFO_SAMP_FREQ), \
-	.address = _address, \
-	.scan_index = _address, \
+	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SAMP_FREQ), \
+	.output = 0, \
 	.scan_type = { \
-		.sign = (_type == IIO_ANGL) ? 'u' : 's', \
-		.realbits = _rb, \
+		.sign = 'u', \
+		.realbits = 32, \
 		.storagebits = 32, \
 		.shift = 0, \
 		.endianness = IIO_LE, \
 	}, \
 }
 
-static const struct iio_chan_spec open5G_channels[] = {
-	SDR_CHANNEL(0, IIO_ANGL, 0, 0, 32),
-	SDR_CHANNEL(1, IIO_VOLTAGE, 0, 0, 24)
+static const struct iio_chan_spec skynet_rx_channels[] = {
+	SKYNET_RX_CHAN(0)
 };
 
-static const struct sdr_chip_info open5G_chip_info = {
-	.channels = open5G_channels,
-	.num_channels = ARRAY_SIZE(open5G_channels),
+static const struct sdr_chip_info skynet_rx_chip_info = {
+	.channels = skynet_rx_channels,
+	.num_channels = ARRAY_SIZE(skynet_rx_channels),
     .version = AXI_PCORE_VER(1, 0, 'a'),
 };
 
@@ -85,11 +81,11 @@ static inline unsigned int axiadc_read(struct axiadc_state *st, unsigned reg)
 	return ioread32(st->regs + reg);
 }
 
-static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
+static int skynet_rx_hw_submit_block(struct iio_dma_buffer_queue *queue,
 	struct iio_dma_buffer_block *block)
 {
-	struct iio_dev *indio_dev = queue->driver_data;
-	struct axiadc_state *st = iio_priv(indio_dev);
+	// struct iio_dev *indio_dev = queue->driver_data;
+	// struct axiadc_state *st = iio_priv(indio_dev);
 
 	block->block.bytes_used = block->block.size;
 
@@ -99,7 +95,7 @@ static int axiadc_hw_submit_block(struct iio_dma_buffer_queue *queue,
 }
 
 static const struct iio_dma_buffer_ops axiadc_dma_buffer_ops = {
-	.submit = axiadc_hw_submit_block,
+	.submit = skynet_rx_hw_submit_block,
 	.abort = iio_dmaengine_buffer_abort,
 };
 
@@ -122,8 +118,8 @@ static int axiadc_configure_ring_stream(struct iio_dev *indio_dev,
 static int axiadc_read_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int *val, int *val2, long info)
 {
-	struct axiadc_state *st = iio_priv(indio_dev);
-	uint32_t reg;
+	// struct axiadc_state *st = iio_priv(indio_dev);
+	// uint32_t reg;
 
 	switch (info) {
 	case IIO_CHAN_INFO_SAMP_FREQ:
@@ -144,8 +140,8 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
 static int axiadc_write_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int val, int val2, long info)
 {
-	struct axiadc_state *st = iio_priv(indio_dev);
-	uint32_t reg;
+	// struct axiadc_state *st = iio_priv(indio_dev);
+	// uint32_t reg;
 
 	switch (info) {
 	case IIO_CHAN_INFO_SAMP_FREQ:
@@ -166,24 +162,68 @@ static int sdr_reg_access(struct iio_dev *indio_dev,
 	struct axiadc_state *st = iio_priv(indio_dev);
 
 	mutex_lock(&st->lock);
-    if (readval == NULL)
+    if (readval == NULL) {
         axiadc_write(st, reg & 0xFFFF, writeval);
-    else
+    }
+    else {
         *readval = axiadc_read(st, reg & 0xFFFF);
+    }
 	mutex_unlock(&st->lock);
 
 	return 0;
 }
 
+static ssize_t show_reg(struct device *dev,
+			   struct device_attribute *attr,
+			   char *buf)
+{
+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
+	struct axiadc_state *st = iio_priv(indio_dev);
+	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
+    unsigned int readval = axiadc_read(st, (u32)this_attr->address);
+	
+    return sysfs_emit(buf, "%d\n", readval);
+}
+
+static IIO_DEVICE_ATTR(fs_status, S_IRUGO,
+	show_reg, NULL, 0xC014 - 0x4000);
+
+static IIO_DEVICE_ATTR(rgf_overflow, S_IRUGO,
+	show_reg, NULL, 0xC01C - 0x4000);
+
+static IIO_DEVICE_ATTR(n_id, S_IRUGO,
+	show_reg, NULL, 0x8020 - 0x4000);
+
+static IIO_DEVICE_ATTR(num_disconnects, S_IRUGO,
+	show_reg, NULL, 0xC034 - 0x4000);
+
+static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
+	show_reg, NULL, 0x4030 - 0x4000);
+
+
+static struct attribute *skynet_rx_attributes[] = {
+	&iio_dev_attr_fs_status.dev_attr.attr,
+	&iio_dev_attr_rgf_overflow.dev_attr.attr,
+	&iio_dev_attr_n_id.dev_attr.attr,
+	&iio_dev_attr_num_disconnects.dev_attr.attr,
+	&iio_dev_attr_detection_shift.dev_attr.attr,
+	NULL,
+};
+
+static const struct attribute_group skynet_rx_group = {
+	.attrs = skynet_rx_attributes,
+};
+
 static const struct iio_info sdr_info = {
 	.read_raw = axiadc_read_raw,
 	.write_raw = axiadc_write_raw,
 	.debugfs_reg_access = &sdr_reg_access,
+    .attrs = &skynet_rx_group,
 	// .update_scan_mode = axiadc_update_scan_mode,
 };
 
 static const struct of_device_id sdr_of_match[] = {
-	{ .compatible = "catkira,skynet_rx-1.00.a", .data = &open5G_chip_info },
+	{ .compatible = "catkira,skynet_rx-1.00.a", .data = &skynet_rx_chip_info },
 	{ /* end of list */ },
 };
 MODULE_DEVICE_TABLE(of, sdr_of_match);

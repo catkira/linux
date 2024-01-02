@@ -1,5 +1,5 @@
 /*
- * open5G_phy
+ * SkyNET_TX
  *
  * Copyright 2023 Benjamin Menkuec
  *
