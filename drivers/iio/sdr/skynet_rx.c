@@ -115,7 +115,7 @@ static int axiadc_configure_ring_stream(struct iio_dev *indio_dev,
 	return 0;
 }
 
-static int axiadc_read_raw(struct iio_dev *indio_dev,
+static int skynet_tx_read_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int *val, int *val2, long info)
 {
 	// struct axiadc_state *st = iio_priv(indio_dev);
@@ -126,10 +126,6 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
         *val = 69;
         *val2 = 69;
 		return IIO_VAL_INT;
-	case IIO_CHAN_INFO_CALIBSCALE:
-        *val = 69;
-        *val2 = 69;
-		return IIO_VAL_INT;
 	default:
 		break;
 	}
@@ -137,7 +133,7 @@ static int axiadc_read_raw(struct iio_dev *indio_dev,
 	return -EINVAL;
 }
 
-static int axiadc_write_raw(struct iio_dev *indio_dev,
+static int skynet_tx_write_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int val, int val2, long info)
 {
 	// struct axiadc_state *st = iio_priv(indio_dev);
@@ -145,8 +141,6 @@ static int axiadc_write_raw(struct iio_dev *indio_dev,
 
 	switch (info) {
 	case IIO_CHAN_INFO_SAMP_FREQ:
-		return 0;
-	case IIO_CHAN_INFO_CALIBSCALE:
 		return 0;
 	default:
 		break;
@@ -215,8 +209,8 @@ static const struct attribute_group skynet_rx_group = {
 };
 
 static const struct iio_info sdr_info = {
-	.read_raw = axiadc_read_raw,
-	.write_raw = axiadc_write_raw,
+	.read_raw = skynet_tx_read_raw,
+	.write_raw = skynet_tx_write_raw,
 	.debugfs_reg_access = &sdr_reg_access,
     .attrs = &skynet_rx_group,
 	// .update_scan_mode = axiadc_update_scan_mode,
