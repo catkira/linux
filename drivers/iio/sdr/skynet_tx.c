@@ -238,6 +238,15 @@ static IIO_DEVICE_ATTR(ldpc_1st_out_byte2, S_IRUGO,
 static IIO_DEVICE_ATTR(ssb_sym, S_IWUSR | S_IRUGO,
 	show_reg, NULL, 0x43);
 
+static IIO_DEVICE_ATTR(pkt_cnt_eth, S_IRUGO,
+	show_reg, NULL, 0x44);
+
+static IIO_DEVICE_ATTR(pkt_cnt_ip, S_IRUGO,
+	show_reg, NULL, 0x45);
+
+static IIO_DEVICE_ATTR(pkt_cnt_udp, S_IRUGO,
+	show_reg, NULL, 0x46);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -254,6 +263,9 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_ldpc_1st_in_byte2.dev_attr.attr,
 	&iio_dev_attr_ldpc_1st_out_byte2.dev_attr.attr,
 	&iio_dev_attr_ssb_sym.dev_attr.attr,
+	&iio_dev_attr_pkt_cnt_eth.dev_attr.attr,
+	&iio_dev_attr_pkt_cnt_ip.dev_attr.attr,
+	&iio_dev_attr_pkt_cnt_udp.dev_attr.attr,
 	NULL,
 };
 
