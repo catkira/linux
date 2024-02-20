@@ -250,6 +250,14 @@ static IIO_DEVICE_ATTR(pkt_cnt_udp, S_IRUGO,
 static IIO_DEVICE_ATTR(eth_status, S_IRUGO,
 	show_reg, NULL, 0x5C);
 
+static IIO_DEVICE_ATTR(ip_status, S_IRUGO,
+	show_reg, NULL, 0x60);
+
+static IIO_DEVICE_ATTR(eth_type, S_IRUGO,
+	show_reg, NULL, 0x64);
+
+static IIO_DEVICE_ATTR(pkt_cnt_ip_fail, S_IRUGO,
+	show_reg, NULL, 0x68);
 
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
@@ -271,6 +279,9 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_pkt_cnt_ip.dev_attr.attr,
 	&iio_dev_attr_pkt_cnt_udp.dev_attr.attr,
 	&iio_dev_attr_eth_status.dev_attr.attr,
+	&iio_dev_attr_ip_status.dev_attr.attr,
+	&iio_dev_attr_eth_type.dev_attr.attr,
+	&iio_dev_attr_pkt_cnt_ip_fail.dev_attr.attr,
 	NULL,
 };
 
