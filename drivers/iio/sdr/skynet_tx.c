@@ -175,7 +175,7 @@ static ssize_t show_reg(struct device *dev,
 	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
     unsigned int readval = axiadc_read(st, (u32)this_attr->address);
 	
-    return sysfs_emit(buf, "%d\n", readval);
+    return sysfs_emit(buf, "%u\n", readval);
 }
 
 static ssize_t set_source_select(struct device *dev,
@@ -259,6 +259,12 @@ static IIO_DEVICE_ATTR(eth_type, S_IRUGO,
 static IIO_DEVICE_ATTR(pkt_cnt_ip_fail, S_IRUGO,
 	show_reg, NULL, 0x68);
 
+static IIO_DEVICE_ATTR(pkt_cnt_ip_match, S_IRUGO,
+	show_reg, NULL, 0x6C);
+
+static IIO_DEVICE_ATTR(last_dest_ip, S_IRUGO,
+	show_reg, NULL, 0x70);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -282,6 +288,8 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_ip_status.dev_attr.attr,
 	&iio_dev_attr_eth_type.dev_attr.attr,
 	&iio_dev_attr_pkt_cnt_ip_fail.dev_attr.attr,
+	&iio_dev_attr_pkt_cnt_ip_match.dev_attr.attr,
+	&iio_dev_attr_last_dest_ip.dev_attr.attr,
 	NULL,
 };
 
