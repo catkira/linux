@@ -178,7 +178,7 @@ static ssize_t show_reg(struct device *dev,
     return sysfs_emit(buf, "%u\n", readval);
 }
 
-static ssize_t set_source_select(struct device *dev,
+static ssize_t set_reg_int(struct device *dev,
 			  struct device_attribute *attr,
 			  const char *buf,
 			  size_t len)
@@ -194,7 +194,7 @@ static ssize_t set_source_select(struct device *dev,
 }
 
 static IIO_DEVICE_ATTR(source_select, S_IWUSR | S_IRUGO,
-	show_reg, set_source_select, 0x14);
+	show_reg, set_reg_int, 0x14);
 
 static IIO_DEVICE_ATTR(pdsch_encoder_in_state, S_IRUGO,
 	show_reg, NULL, 0x18);
@@ -264,6 +264,12 @@ static IIO_DEVICE_ATTR(pkt_cnt_ip_match, S_IRUGO,
 
 static IIO_DEVICE_ATTR(last_dest_ip, S_IRUGO,
 	show_reg, NULL, 0x70);
+
+static IIO_DEVICE_ATTR(enable_control_tx, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x74);
+
+static IIO_DEVICE_ATTR(enable_video_tx, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x78);
 
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
