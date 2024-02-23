@@ -296,6 +296,8 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_pkt_cnt_ip_fail.dev_attr.attr,
 	&iio_dev_attr_pkt_cnt_ip_match.dev_attr.attr,
 	&iio_dev_attr_last_dest_ip.dev_attr.attr,
+	&iio_dev_attr_enable_control_tx.dev_attr.attr,
+	&iio_dev_attr_enable_video_tx.dev_attr.attr,
 	NULL,
 };
 
