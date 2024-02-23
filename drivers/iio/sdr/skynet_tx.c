@@ -185,11 +185,12 @@ static ssize_t set_reg_int(struct device *dev,
 {
 	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 	struct axiadc_state *st = iio_priv(indio_dev);
+	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
     unsigned int writeval;
     int ret = kstrtouint(buf, 10, &writeval);
     if (ret)
 		return ret;
-    axiadc_write(st, 0x0014, writeval);
+    axiadc_write(st, (u32)this_attr->address, writeval);
 	return len;
 }
 
