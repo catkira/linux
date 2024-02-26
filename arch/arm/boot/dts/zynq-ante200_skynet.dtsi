@@ -179,7 +179,7 @@
 		ranges;
 
         uartlite: uartlite_0@7c4C0000 {
-            compatible = "xlnx,xps-uartlite-2.00.a";
+            compatible = "xlnx,xps-uartlite-1.00.a";
             reg = <0x7c4C0000 0x10000>;
             interrupts = <0 59 IRQ_TYPE_LEVEL_HIGH>;
             clock = <125000000>;
