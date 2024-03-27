@@ -272,6 +272,9 @@ static IIO_DEVICE_ATTR(enable_control_tx, S_IWUSR | S_IRUGO,
 static IIO_DEVICE_ATTR(enable_video_tx, S_IWUSR | S_IRUGO,
 	show_reg, set_reg_int, 0x78);
 
+static IIO_DEVICE_ATTR(debug_in_byte_cnt, S_IRUGO,
+	show_reg, NULL, 0x7C);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -299,6 +302,7 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_last_dest_ip.dev_attr.attr,
 	&iio_dev_attr_enable_control_tx.dev_attr.attr,
 	&iio_dev_attr_enable_video_tx.dev_attr.attr,
+	&iio_dev_attr_debug_in_byte_cnt.dev_attr.attr,
 	NULL,
 };
 
