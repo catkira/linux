@@ -178,10 +178,24 @@
 		#size-cells = <0x1>;
 		ranges;
 
-        uartlite: uartlite_0@7c4C0000 {
+        uartlite0: uartlite_0@7c4C0000 {
             compatible = "xlnx,xps-uartlite-1.00.a";
             reg = <0x7c4C0000 0x10000>;
             interrupts = <0 59 IRQ_TYPE_LEVEL_HIGH>;
+            clock = <125000000>;
+        };
+
+        uartlite1: uartlite_0@7c4D0000 {
+            compatible = "xlnx,xps-uartlite-1.00.a";
+            reg = <0x7c4D0000 0x10000>;
+            interrupts = <0 44 IRQ_TYPE_LEVEL_HIGH>;
+            clock = <125000000>;
+        };
+
+        uartlite2: uartlite_0@7c4E0000 {
+            compatible = "xlnx,xps-uartlite-1.00.a";
+            reg = <0x7c4E0000 0x10000>;
+            interrupts = <0 45 IRQ_TYPE_LEVEL_HIGH>;
             clock = <125000000>;
         };
 
