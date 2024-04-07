@@ -28,7 +28,6 @@
 	};
 
 	chosen {
-		stdout-path = "/amba@0/uart@E0001000";
 	};
 
 
