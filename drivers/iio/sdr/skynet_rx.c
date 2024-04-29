@@ -179,21 +179,27 @@ static ssize_t show_reg(struct device *dev,
     return sysfs_emit(buf, "%d\n", readval);
 }
 
+// frame_sync regmap
 static IIO_DEVICE_ATTR(fs_status, S_IRUGO,
 	show_reg, NULL, 0xC014 - 0x4000);
-
 static IIO_DEVICE_ATTR(rgf_overflow, S_IRUGO,
 	show_reg, NULL, 0xC01C - 0x4000);
-
-static IIO_DEVICE_ATTR(n_id, S_IRUGO,
-	show_reg, NULL, 0x8020 - 0x4000);
-
 static IIO_DEVICE_ATTR(num_disconnects, S_IRUGO,
 	show_reg, NULL, 0xC034 - 0x4000);
 
+// pss_detector regmap
 static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
 	show_reg, NULL, 0x4030 - 0x4000);
 
+// receiver regmap
+static IIO_DEVICE_ATTR(n_id, S_IRUGO,
+	show_reg, NULL, 0x8020 - 0x4000);
+static IIO_DEVICE_ATTR(nfft, S_IRUGO,
+	show_reg, NULL, 0x8048 - 0x4000);
+static IIO_DEVICE_ATTR(dna_low, S_IRUGO,
+	show_reg, NULL, 0x8040 - 0x4000);
+static IIO_DEVICE_ATTR(dna_high, S_IRUGO,
+	show_reg, NULL, 0x8044 - 0x4000);
 
 static struct attribute *skynet_rx_attributes[] = {
 	&iio_dev_attr_fs_status.dev_attr.attr,
@@ -201,6 +207,9 @@ static struct attribute *skynet_rx_attributes[] = {
 	&iio_dev_attr_n_id.dev_attr.attr,
 	&iio_dev_attr_num_disconnects.dev_attr.attr,
 	&iio_dev_attr_detection_shift.dev_attr.attr,
+	&iio_dev_attr_nfft.dev_attr.attr,
+	&iio_dev_attr_dna_low.dev_attr.attr,
+	&iio_dev_attr_dna_high.dev_attr.attr,
 	NULL,
 };
 
