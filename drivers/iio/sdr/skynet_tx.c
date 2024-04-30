@@ -284,6 +284,9 @@ static IIO_DEVICE_ATTR(tbs, S_IRUGO,
 static IIO_DEVICE_ATTR(num_cb, S_IRUGO,
 	show_reg, NULL, 0x88);
 
+static IIO_DEVICE_ATTR(zc, S_IRUGO,
+	show_reg, NULL, 0x8C);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -315,6 +318,7 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_mcs.dev_attr.attr,
 	&iio_dev_attr_tbs.dev_attr.attr,
 	&iio_dev_attr_num_cb.dev_attr.attr,
+	&iio_dev_attr_zc.dev_attr.attr,
 	NULL,
 };
 
