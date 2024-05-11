@@ -216,6 +216,7 @@ static IIO_DEVICE_ATTR(dna_high, S_IRUGO,
 	show_reg, NULL, 0x8044 - 0x4000);
 
 static struct attribute *skynet_rx_attributes[] = {
+	&iio_dev_attr_git_hash.dev_attr.attr,
 	&iio_dev_attr_fs_status.dev_attr.attr,
 	&iio_dev_attr_rgf_overflow.dev_attr.attr,
 	&iio_dev_attr_n_id.dev_attr.attr,
