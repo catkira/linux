@@ -179,6 +179,18 @@ static ssize_t show_reg(struct device *dev,
     return sysfs_emit(buf, "%d\n", readval);
 }
 
+static ssize_t show_reg_hex(struct device *dev,
+			   struct device_attribute *attr,
+			   char *buf)
+{
+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
+	struct axiadc_state *st = iio_priv(indio_dev);
+	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
+    unsigned int readval = axiadc_read(st, (u32)this_attr->address);
+	
+    return sysfs_emit(buf, "%x\n", readval);
+}
+
 // frame_sync regmap
 static IIO_DEVICE_ATTR(fs_status, S_IRUGO,
 	show_reg, NULL, 0xC014 - 0x4000);
@@ -192,6 +204,8 @@ static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
 	show_reg, NULL, 0x4030 - 0x4000);
 
 // receiver regmap
+static IIO_DEVICE_ATTR(git_hash, S_IRUGO,
+	show_reg_hex, NULL, 0x800C - 0x4000);
 static IIO_DEVICE_ATTR(n_id, S_IRUGO,
 	show_reg, NULL, 0x8020 - 0x4000);
 static IIO_DEVICE_ATTR(nfft, S_IRUGO,
