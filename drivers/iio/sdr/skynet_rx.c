@@ -205,7 +205,7 @@ static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
 
 // receiver regmap
 static IIO_DEVICE_ATTR(git_hash, S_IRUGO,
-	show_reg_hex, NULL, 0x800C - 0x4000);
+	show_reg_hex, NULL, 0x8014 - 0x4000);
 static IIO_DEVICE_ATTR(n_id, S_IRUGO,
 	show_reg, NULL, 0x8020 - 0x4000);
 static IIO_DEVICE_ATTR(nfft, S_IRUGO,
