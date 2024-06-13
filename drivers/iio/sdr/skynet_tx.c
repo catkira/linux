@@ -290,6 +290,24 @@ static IIO_DEVICE_ATTR(zc, S_IRUGO,
 static IIO_DEVICE_ATTR(pkt_cnt_crsf, S_IRUGO,
 	show_reg, NULL, 0x90);
 
+static IIO_DEVICE_ATTR(aes_key_0, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x100);
+static IIO_DEVICE_ATTR(aes_key_1, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x104);
+static IIO_DEVICE_ATTR(aes_key_2, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x108);
+static IIO_DEVICE_ATTR(aes_key_3, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x10C);
+static IIO_DEVICE_ATTR(aes_key_4, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x110);
+static IIO_DEVICE_ATTR(aes_key_5, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x114);
+static IIO_DEVICE_ATTR(aes_key_6, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x118);
+static IIO_DEVICE_ATTR(aes_key_7, S_IWUSR | S_IRUGO,
+	show_reg, NULL, 0x11C);
+
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -323,6 +341,14 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_num_cb.dev_attr.attr,
 	&iio_dev_attr_zc.dev_attr.attr,
 	&iio_dev_attr_pkt_cnt_crsf.dev_attr.attr,
+	&iio_dev_attr_aes_key_0.dev_attr.attr,
+	&iio_dev_attr_aes_key_1.dev_attr.attr,
+	&iio_dev_attr_aes_key_2.dev_attr.attr,
+	&iio_dev_attr_aes_key_3.dev_attr.attr,
+	&iio_dev_attr_aes_key_4.dev_attr.attr,
+	&iio_dev_attr_aes_key_5.dev_attr.attr,
+	&iio_dev_attr_aes_key_6.dev_attr.attr,
+	&iio_dev_attr_aes_key_7.dev_attr.attr,
 	NULL,
 };
 
