@@ -291,21 +291,27 @@ static IIO_DEVICE_ATTR(pkt_cnt_crsf, S_IRUGO,
 	show_reg, NULL, 0x90);
 
 static IIO_DEVICE_ATTR(aes_key_0, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x100);
+	show_reg, set_reg_int, 0x100);
 static IIO_DEVICE_ATTR(aes_key_1, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x104);
+	show_reg, set_reg_int, 0x104);
 static IIO_DEVICE_ATTR(aes_key_2, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x108);
+	show_reg, set_reg_int, 0x108);
 static IIO_DEVICE_ATTR(aes_key_3, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x10C);
+	show_reg, set_reg_int, 0x10C);
 static IIO_DEVICE_ATTR(aes_key_4, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x110);
+	show_reg, set_reg_int, 0x110);
 static IIO_DEVICE_ATTR(aes_key_5, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x114);
+	show_reg, set_reg_int, 0x114);
 static IIO_DEVICE_ATTR(aes_key_6, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x118);
+	show_reg, set_reg_int, 0x118);
 static IIO_DEVICE_ATTR(aes_key_7, S_IWUSR | S_IRUGO,
-	show_reg, NULL, 0x11C);
+	show_reg, set_reg_int, 0x11C);
+
+static IIO_DEVICE_ATTR(aes_id, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x120);
+
+static IIO_DEVICE_ATTR(aes_enable, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x124);
 
 
 static struct attribute *skynet_tx_attributes[] = {
@@ -349,6 +355,8 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_aes_key_5.dev_attr.attr,
 	&iio_dev_attr_aes_key_6.dev_attr.attr,
 	&iio_dev_attr_aes_key_7.dev_attr.attr,
+	&iio_dev_attr_aes_id.dev_attr.attr,
+	&iio_dev_attr_aes_enable.dev_attr.attr,
 	NULL,
 };
 
