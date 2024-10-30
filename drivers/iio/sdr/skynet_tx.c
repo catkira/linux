@@ -331,6 +331,9 @@ static IIO_DEVICE_ATTR(update_aes_key_request, S_IWUSR | S_IRUGO,
 static IIO_DEVICE_ATTR(tx_port, S_IWUSR | S_IRUGO,
 	show_reg, set_reg_int, 0x144);
 
+static IIO_DEVICE_ATTR(precoding, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x148);
+
 static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_source_select.dev_attr.attr,
 	&iio_dev_attr_pdsch_encoder_in_state.dev_attr.attr,
@@ -376,6 +379,7 @@ static struct attribute *skynet_tx_attributes[] = {
 	&iio_dev_attr_aes_enable.dev_attr.attr,
 	&iio_dev_attr_update_aes_key_request.dev_attr.attr,
 	&iio_dev_attr_tx_port.dev_attr.attr,
+	&iio_dev_attr_precoding.dev_attr.attr,
 	NULL,
 };
 
