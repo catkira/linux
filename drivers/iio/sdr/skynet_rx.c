@@ -191,6 +191,22 @@ static ssize_t show_reg_hex(struct device *dev,
     return sysfs_emit(buf, "%x\n", readval);
 }
 
+static ssize_t set_reg_int(struct device *dev,
+			  struct device_attribute *attr,
+			  const char *buf,
+			  size_t len)
+{
+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
+	struct axiadc_state *st = iio_priv(indio_dev);
+	struct iio_dev_attr *this_attr = to_iio_dev_attr(attr);
+    unsigned int writeval;
+    int ret = kstrtouint(buf, 10, &writeval);
+    if (ret)
+		return ret;
+    axiadc_write(st, (u32)this_attr->address, writeval);
+	return len;
+}
+
 // frame_sync regmap
 static IIO_DEVICE_ATTR(fs_status, S_IRUGO,
 	show_reg, NULL, 0xC014 - 0x4000);
@@ -202,6 +218,8 @@ static IIO_DEVICE_ATTR(num_disconnects, S_IRUGO,
 // pss_detector regmap
 static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
 	show_reg, NULL, 0x4030 - 0x4000);
+static IIO_DEVICE_ATTR(require_single_peak, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0x403C - 0x4000);
 
 // receiver regmap
 static IIO_DEVICE_ATTR(git_hash, S_IRUGO,
@@ -222,6 +240,7 @@ static struct attribute *skynet_rx_attributes[] = {
 	&iio_dev_attr_n_id.dev_attr.attr,
 	&iio_dev_attr_num_disconnects.dev_attr.attr,
 	&iio_dev_attr_detection_shift.dev_attr.attr,
+	&iio_dev_attr_require_single_peak.dev_attr.attr,
 	&iio_dev_attr_nfft.dev_attr.attr,
 	&iio_dev_attr_dna_low.dev_attr.attr,
 	&iio_dev_attr_dna_high.dev_attr.attr,
