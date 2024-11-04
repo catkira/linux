@@ -214,6 +214,8 @@ static IIO_DEVICE_ATTR(rgf_overflow, S_IRUGO,
 	show_reg, NULL, 0xC01C - 0x4000);
 static IIO_DEVICE_ATTR(num_disconnects, S_IRUGO,
 	show_reg, NULL, 0xC034 - 0x4000);
+static IIO_DEVICE_ATTR(allowed_ssb_misses, S_IWUSR | S_IRUGO,
+	show_reg, set_reg_int, 0xC056 - 0x4000);
 
 // pss_detector regmap
 static IIO_DEVICE_ATTR(detection_shift, S_IRUGO,
@@ -240,6 +242,7 @@ static struct attribute *skynet_rx_attributes[] = {
 	&iio_dev_attr_n_id.dev_attr.attr,
 	&iio_dev_attr_num_disconnects.dev_attr.attr,
 	&iio_dev_attr_detection_shift.dev_attr.attr,
+	&iio_dev_attr_allowed_ssb_misses.dev_attr.attr,
 	&iio_dev_attr_require_single_peak.dev_attr.attr,
 	&iio_dev_attr_nfft.dev_attr.attr,
 	&iio_dev_attr_dna_low.dev_attr.attr,
